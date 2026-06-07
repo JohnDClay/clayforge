@@ -36,6 +36,15 @@ clayforge new demo && cd demo && clayforge run
 
 ---
 
+**Last updated**: 2026-06-07 — Successful push to GitHub (user: "it worked i think:" + full push output showing new branch main -> main). Repository live at https://github.com/JohnDClay/clayforge.
+- Post-push validation (per project discipline): ruff check "All checks passed!", pytest 33 passed, PYTHONPATH=src showcase() render healthy (309k chars, dedicated #section-grok / #section-agents / dashboard viz / forms separation / overview live elements all present and isolated).
+- No personal info (jdcla / full C:\ paths / "Grok Build") remains anywhere in the tree (grep clean).
+- Remote confirmed clean via git config: https://github.com/JohnDClay/clayforge.git ; branch tracking set to origin/main.
+- .github/ has issue templates + PR template + enhanced CI.
+- All prior pre-push work (hygiene, URL scrub to JohnDClay, personal data removal, CI E2E, UI polish on showcase with "description above + code snippet + live demo" pattern everywhere, live viz mutations, framework-native AgentCanvas/GrokChat in tabs only, 50px GAP, sidebar, centering, no leaks) stands.
+UI complete and beautiful. The showcase is our showcase. Project now public on GitHub. "go team." Call it complete when ready.
+
+Prior note (for history):
 **Last updated**: 2026-06-06 — Pre-GitHub hygiene + CI + examples pass (user: "you are driving so do what you think we need next. go team"). 
 - CI enhanced (.github/workflows/ci.yml): added full extras [viz,grok,db,auth] validation, E2E `clayforge new` + scaffold ruff/import smoke (runs on every matrix Python), Showcase + core render smoke. Matches packaging role in AGENTS.md.
 - Examples audit: key ones (01_hello, 03_grok_chat, 04_multi_agent, auth_db_todo) run cleanly (app logic starts without errors; port conflicts in env are expected for server demos, no code issues).

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased] - 2026-06 (User-driven: swarm re-creation + GrokChat un-embed + gallery removal + centering)
+- **GitHub launch**: User: "it worked i think:" followed by successful first push output:
+  ```
+  Enumerating objects: 94, done.
+  ...
+  To https://github.com/JohnDClay/clayforge.git
+   * [new branch]      main -> main
+  branch 'main' set up to track 'origin/main'.
+  ```
+  Repository is now live: https://github.com/JohnDClay/clayforge . All prior GitHub hygiene (URL updates to JohnDClay/clayforge in pyproject/CONTRIBUTING/cli/server, personal info scrub of all jdcla + full Windows paths from STATUS/CHANGELOG/etc., .github CI + issue/PR templates, clean initial commit) complete. Final validation post-push: ruff clean, 33 pytest pass, showcase() render 309k chars with all dedicated tabs (GrokChat, Agent Vision/Research Swarm, Dashboard live viz, Forms/Tools with desc+snippet+demo pattern, Overview live counters) healthy and isolated. "go team."
 - Per user (swarm): "you didnt change anything visually good. it is looking worse. ... get rid of the embedded swarm on each page. why is it embedded anyway? ... re-create a brand new completely different research swarm that has completly different programming ... another task you work on this run is getting rid of the gallery. ... the showcase is our showcase. go team."
 - Per user (grok): "ok beautiful work. looks so much better. now one other thing is i think the chatbot is embedded like the last swarm was. we need to get rid of the embedded crapbot and make a new one like we did the swarm. ... get the chatbot unembedded ... re-creating the chatbot like we did the research swarm. you can even make the chatbot example better looking and maybe a demo function for visuals. go team."
 - **Production Viz Components live demo upgrade (focus of this run)**: Per user (verbatim): "ok nice job on those new additions. now focus on this part i asked you to change: Production Viz Components (first-class in ClayForge) Embed PlotlyChart & DataTable directly in Python — they render live and support real event handlers + WS mutations. Live PlotlyChart Mutate & Update Python restyle via live mutation (exact same flow as production Grok/agent updates) Live DataTable (pandas-ready, sortable, selectable) Filter rows... Acme	1240000	Series B Stark	890000	Public Wayne	2100000	Series C Oscorp	450000	Series A Click rows to select • Click headers to sort • Real Python event handlers you did nothing i could see visually to this part. make this demo upgrade cool for the poly chart and data demo. everyone on board for this. the chart doesnt have to be interactive or anything, we just need some visual there and maybe some of it changes when the demo is started. can we get this done team? go team."
