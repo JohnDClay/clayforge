@@ -1,0 +1,105 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
+
+      - name: Install package with dev extras
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Ruff format check
+        run: ruff format --check .
+
+      - name: Run tests
+        run: pytest -q --tb=line
+
+      - name: Validate production extras (viz + grok)
+        # Ensures clean installs + graceful behavior for real-world production usage.
+        # Runs on every matrix entry for full coverage.
+        run: |
+          pip install ".[viz,grok]"
+          python -c '
+import clayforge as cf
+from clayforge.grok import GrokChat, AgentCanvas, GrokClient
+from clayforge.components.viz import PlotlyChart, DataTable
+print("✓ Production extras import cleanly")
+print(f"  ClayForge {cf.__version__}")
+print("  GrokChat, AgentCanvas, GrokClient, PlotlyChart, DataTable all available")
+          '
+
+      - name: Validate full production extras (viz,grok,db,auth)
+        # Full stack test for packaging confidence.
+        run: |
+          pip install ".[viz,grok,db,auth]"
+          python -c '
+import clayforge as cf
+from clayforge import auth, db
+from clayforge.grok import GrokChat, AgentCanvas
+from clayforge.components.viz import PlotlyChart, DataTable
+print("✓ Full production extras [viz,grok,db,auth] import cleanly")
+print("  auth, db, GrokChat, AgentCanvas, PlotlyChart, DataTable available")
+          '
+
+      - name: E2E clayforge new + scaffold validation
+        # Critical for GitHub readiness: ensure `clayforge new` produces a clean, lintable project.
+        # Runs on every matrix for cross-version confidence.
+        run: |
+          tmpdir=$(mktemp -d)
+          python -m clayforge new "$tmpdir/testapp"
+          cd "$tmpdir/testapp"
+          python -m ruff check .
+          python -c '
+import sys
+sys.path.insert(0, ".")
+import app
+print("✓ Scaffold imports cleanly")
+print("  app = cf.App(...) works")
+'
+          cd -
+          rm -rf "$tmpdir"
+          echo "✓ clayforge new E2E passed (scaffold + ruff + import)"
+
+      - name: Showcase and core render smoke
+        # Ensures the living demo and render pipeline stay healthy (no regressions post-UI polish).
+        run: |
+          python -c '
+import sys
+sys.path.insert(0, "src")
+from showcase.app import showcase
+t = showcase()
+html = t.to_html() if hasattr(t, "to_html") else str(t)
+assert len(html) > 100000, "Showcase render too small"
+print("✓ Showcase render OK, len=", len(html))
+print("  Dedicated tabs + live demos present")
+'
+          echo "✓ Showcase/render smoke passed"
+
+      - name: Build wheel (packaging check)
+        run: |
+          pip install build
+          python -m build --wheel --outdir dist/

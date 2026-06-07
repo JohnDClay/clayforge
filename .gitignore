@@ -1,0 +1,93 @@
+# ClayForge .gitignore
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Secrets - never commit files containing real credentials or API keys.
+# We list the common dangerous names explicitly (no broad wildcard that would
+# accidentally hide our safe .env.example templates).
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
+.env.staging
+.env.test
+# Any other .env with secrets should also be avoided by developers.
+# The committed .env.example (and per-project ones from `clayforge new`) are
+# safe because they only contain the placeholder text "your_..._here".
+
+# If you ever need to force-add a real secret file (don't), use: git add -f .env
+
+
+# Database files (SQLite etc. - never commit real data or with keys)
+*.db
+*.sqlite
+*.sqlite3
+clayforge*.db
+
+# Caches and tooling
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.pyre/
+.pytype/
+.coverage
+htmlcov/
+.cache/
+
+# ClayForge specific
+.clayforge/
+.clayforge-*/
+.clayforge_deploy_test*/
+*.clayforge
+
+# IDE / editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary / build / deploy test dirs (user local)
+tmp/
+temp/
+.clayforge_deploy_test*/
+
+# Keep example data dir structure (dbs inside are ignored by *.db)
+!examples/data/.gitkeep

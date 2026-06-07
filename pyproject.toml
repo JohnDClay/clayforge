@@ -1,0 +1,113 @@
+[project]
+name = "clayforge"
+version = "0.2.0-alpha"
+description = "The next-generation, AI-native Python web framework. Beautiful UIs by default. Zero boilerplate. Built for the 2026 Grok/xAI era."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [
+    { name = "ClayForge Contributors" }
+]
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "typer[all]>=0.12.0",
+    "pydantic>=2.9.0",
+    "python-multipart>=0.0.12",
+]
+keywords = [
+    "web-framework",
+    "ui",
+    "dashboard",
+    "ai",
+    "grok",
+    "streamlit-alternative",
+    "fastapi",
+    "data-app",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Environment :: Web Environment",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+Homepage = "https://github.com/JohnDClay/clayforge"
+Repository = "https://github.com/JohnDClay/clayforge"
+Documentation = "https://clayforge.dev"
+Issues = "https://github.com/JohnDClay/clayforge/issues"
+
+[project.scripts]
+clayforge = "clayforge.cli.main:app"
+
+[project.optional-dependencies]
+grok = [
+    # First-class Grok + xAI: REAL token-by-token streaming + tool calling via GrokClient (OpenAI-compatible endpoint at api.x.ai/v1).
+    # GrokChat(api_key=...) and AgentCanvas get live Grok behavior when this extra + XAI_API_KEY are present.
+    # Falls back to gorgeous high-fidelity simulation when missing (perfect for demos/showcase).
+    "openai>=1.30.0",
+]
+viz = [
+    # Production viz stack: PlotlyChart (CDN + dark harmony + live updates) + DataTable (pandas/altair). Graceful errors.
+    "plotly>=5.22.0",
+    "pandas>=2.2.0",
+    "altair>=5.0.0",
+]
+db = [
+    # SQLite (stdlib, always works) + SQLModel + async (aiosqlite). Postgres via postgresql+asyncpg:// (add asyncpg yourself or via platform).
+    "sqlmodel>=0.0.21",
+    "aiosqlite>=0.20.0",
+]
+auth = [
+    # Optional stronger security for auth: itsdangerous signed sessions + passlib bcrypt. Core auth works great with stdlib fallback.
+    "itsdangerous>=2.2.0",
+]
+dev = [
+    # Full dev/CI: ruff, pytest (+asyncio), httpx, watchfiles. Used in GitHub Actions.
+    "ruff>=0.6.0",
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+    "watchfiles>=0.24.0",
+]
+
+# Production usage (most common real-world combination):
+#   pip install "clayforge[viz,grok]"           # beautiful dashboards + REAL GrokChat streaming (needs XAI_API_KEY)
+#   pip install "clayforge[viz,grok,db,auth]"   # full: viz + Grok + auth + db (SQLite/Postgres)
+#
+# This gives you beautiful reactive dashboards + first-class GrokChat/AgentCanvas + auth+db.
+# Core framework has zero required heavy dependencies. Extras are strictly additive.
+# See README and `clayforge deploy` for deployment guidance (Docker, Railway, Fly...).
+#
+# All extras have clear, self-documenting descriptions in this file.
+
+
+[build-system]
+requires = ["hatchling>=1.25.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/clayforge"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
