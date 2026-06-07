@@ -273,7 +273,8 @@ def run(
 
     console.print(
         Panel(
-            f"🚀 Starting [bold cyan]ClayForge[/bold cyan] at [bold]http://{host}:{port}[/bold]",
+            f"🚀 Starting [bold cyan]ClayForge[/bold cyan] at [bold]http://{host}:{port}[/bold]\n"
+            "(Use --port 8001 if 8000 is busy. On Windows, kill previous python processes if you see bind errors.)",
             border_style="cyan",
         )
     )
@@ -288,6 +289,11 @@ def run(
             mod_name, attr = app_path, "app"
         import importlib
 
+        # Make cwd importable so "app" (from app.py created by `clayforge new`) resolves reliably
+        import sys
+        if str(Path.cwd()) not in sys.path:
+            sys.path.insert(0, str(Path.cwd()))
+
         mod = importlib.import_module(mod_name)
         user_app = getattr(mod, attr, None)
         if user_app is not None:
@@ -296,20 +302,32 @@ def run(
 
             if isinstance(user_app, App):
                 set_current_app(user_app)
-            # Also set env for uvicorn reloader child processes
             os.environ["CLAYFORGE_APP"] = app_path
     except Exception as exc:  # noqa: BLE001
-        console.print(f"[yellow]Warning:[/yellow] Could not pre-mount {app_path}: {exc}")
+        console.print(
+            f"[yellow]Warning:[/yellow] Could not pre-mount {app_path}: {exc}\n"
+            "Tip: cd into your project directory (the one containing app.py), or use --app path/to/yourapp:app\n"
+            "If you see port errors later, another server may be running — kill it or use --port 8001"
+        )
 
     # The real server lives in core.server — we will import the mounted app there
-    uvicorn.run(
-        "clayforge.core.server:app",
-        host=host,
-        port=port,
-        reload=reload,
-        reload_dirs=["."] if reload else None,
-        log_level="info",
-    )
+    try:
+        uvicorn.run(
+            "clayforge.core.server:app",
+            host=host,
+            port=port,
+            reload=reload,
+            reload_dirs=["."] if reload else None,
+            log_level="info",
+        )
+    except OSError as e:
+        if "10048" in str(e) or "address already in use" in str(e).lower():
+            console.print(f"[red]Port {port} is already in use.[/red] Kill the other process or use --port 8001.")
+        elif "10013" in str(e) or "access" in str(e).lower():
+            console.print("[red]Access denied binding the port.[/red] Try a different --port or check antivirus/firewall.")
+        else:
+            raise
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -356,19 +374,28 @@ def showcase() -> None:
                 "For the complete experience from source:\n"
                 "  git clone https://github.com/JohnDClay/clayforge\n"
                 "  cd clayforge\n"
-                '  pip install -e ".[viz,grok]"\n'
+                '  pip install -e ".[viz,grok]"\n'  # optional; plain `pip install clayforge` + `clayforge showcase` is enough to see the real demo  # optional later for real streaming/viz in *your* apps; `clayforge showcase` + core work with plain `pip install clayforge`
                 "  python -m clayforge showcase",
                 title="[bold cyan]ClayForge Showcase[/bold cyan]",
                 border_style="cyan",
             )
         )
 
-    uvicorn.run(
-        "clayforge.core.server:app",
-        host="127.0.0.1",
-        port=8000,
-        log_level="info",
-    )
+    try:
+        uvicorn.run(
+            "clayforge.core.server:app",
+            host="127.0.0.1",
+            port=8000,
+            log_level="info",
+        )
+    except OSError as e:
+        if "10048" in str(e) or "address already in use" in str(e).lower():
+            console.print("[red]Port 8000 is already in use.[/red] Kill the previous server (or use a different port by running uvicorn directly).")
+        elif "10013" in str(e) or "access" in str(e).lower():
+            console.print("[red]Access denied on port 8000.[/red] Try killing other python processes or use --port with clayforge run.")
+        else:
+            raise
+        raise typer.Exit(1) from e
 
 
 @app.command()
@@ -395,7 +422,7 @@ def deploy(
 
     ClayForge apps are standard ASGI/FastAPI apps. Deploy anywhere.
     Always use the correct extras for production:
-        pip install "clayforge[viz,grok]"
+        pip install clayforge
     """
     platform_map = {
         "docker": ["Dockerfile", ".dockerignore", "docker-compose.yml"],
@@ -414,7 +441,7 @@ def deploy(
                 "[bold cyan]ClayForge Deploy[/bold cyan]\n\n"
                 "ClayForge apps are plain FastAPI/ASGI — deploy to any Python host.\n\n"
                 "[bold]Production extras (highly recommended):[/bold]\n"
-                '  pip install "clayforge[viz,grok]"\n\n'
+                '  pip install clayforge\n\n'
                 "[bold]Write real templates into your project:[/bold]\n"
                 "  clayforge deploy --platform docker --dir .\n"
                 "  clayforge deploy -p railway -d myapp\n\n"
@@ -439,7 +466,7 @@ def deploy(
             f"[bold]{key.upper()}[/bold]\n\n"
             f"Best templates for this platform: [cyan]{', '.join(template_files)}[/cyan]\n\n"
             "Install production extras:\n"
-            '  pip install "clayforge[viz,grok]"\n\n'
+            '  pip install clayforge\n\n'
             "Then use --dir to write the files into your project root.",
             title=f"[cyan]ClayForge Deploy — {key}[/cyan]",
             border_style="cyan",

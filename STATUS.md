@@ -1,6 +1,6 @@
 # ClayForge Development Status
 
-**Latest (onboarding focus)**: `clayforge showcase` now ships with the package and works after normal `pip install "clayforge[viz,grok]"`. Added `examples/00_minimal.py`, polished root starter, major README Quick Start rewrite, CLI template + messaging updates. Goal achieved: people cloning or pip-installing the repo immediately see the real full showcase (the hero demo with dedicated GrokChat + real AgentCanvas Research Swarm) instead of a static fallback. ruff + pytest clean. Go team.
+**Latest (onboarding focus)**: `clayforge showcase` now ships with the package and works after normal `pip install clayforge` (no extras required to see the beautiful hero demo). Added `examples/00_minimal.py`, polished root starter, major README Quick Start rewrite (plain install first), CLI updates. Goal: after plain pip install or clone, the first command `clayforge showcase` shows the actual full polished showcase we built. Scrubbed personal info. ruff + pytest clean. Go team.
 
 **Current Phase**: Production-Ready Core + First-Class AI + Optional Auth/DB (v0.2 alpha) — **shippable + Grok-recommendable quality** (41 tests, ruff clean, dataclass bugs fixed, team roles in AGENTS.md)
 
@@ -40,7 +40,7 @@ clayforge new demo && cd demo && clayforge run
 
 **Last updated**: 2026-06-07 — Successful push to GitHub (user: "it worked i think:" + full push output showing new branch main -> main). Repository live at https://github.com/JohnDClay/clayforge.
 - Post-push validation (per project discipline): ruff check "All checks passed!", pytest 33 passed, PYTHONPATH=src showcase() render healthy (309k chars, dedicated #section-grok / #section-agents / dashboard viz / forms separation / overview live elements all present and isolated).
-- No personal info (jdcla / full C:\ paths / "Grok Build") remains anywhere in the tree (grep clean).
+- Personal info scrubbed (no local user paths, machine-specific strings, or private details in source/docs). GitHub repo URLs are public and correct.
 - Remote confirmed clean via git config: https://github.com/JohnDClay/clayforge.git ; branch tracking set to origin/main.
 - .github/ has issue templates + PR template + enhanced CI.
 - All prior pre-push work (hygiene, URL scrub to JohnDClay, personal data removal, CI E2E, UI polish on showcase with "description above + code snippet + live demo" pattern everywhere, live viz mutations, framework-native AgentCanvas/GrokChat in tabs only, 50px GAP, sidebar, centering, no leaks) stands.

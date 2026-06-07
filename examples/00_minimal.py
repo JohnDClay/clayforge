@@ -87,8 +87,8 @@ def main_page():
             """
 **Explore the real showcase (recommended first thing):**
 ```bash
-pip install "clayforge[viz,grok]"
-clayforge showcase
+pip install clayforge
+clayforge showcase          # the full beautiful hero demo (real AgentCanvas Research Swarm, GrokChat, etc.)
 ```
 
 **Scaffold a full project:**

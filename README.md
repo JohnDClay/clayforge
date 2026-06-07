@@ -6,7 +6,7 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 
 > Write pure Python → Get a stunning interactive web app instantly.
 
-**See the killer demo:** `pip install "clayforge[viz,grok]" && clayforge showcase` — live theming + dedicated GrokChat tab (full interactive, isolated with nice titles first) + Agent Vision (framework-native Research Swarm using real AgentCanvas + update_agent_status/add_event from examples/04; bubble-polished mermaid nodes + tool cards to evoke the cool canvas rendition, 100% buildable with the framework, dedicated tab only, no embed/leak risk). AgentCanvas, auth+db forms, dashboards. The showcase *is* our showcase.
+**See the killer demo:** `pip install clayforge && clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). The showcase *is* our showcase. No extras required to see the real thing.
 
 **Primary way to explore:** `clayforge showcase` — the beautiful, self-contained multi-tab living demo (GrokChat, canvas Research Swarm / Agent Vision, theming, dashboards, forms+auth+db sims). Deep patterns live in the `examples/` folder (run any directly).
 
@@ -26,12 +26,14 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 The fastest way to see what ClayForge actually is:
 
 ```bash
-# 1. Install with the two most useful extras
-pip install "clayforge[viz,grok]"
+# 1. Install (plain — no extras needed for the beautiful showcase)
+pip install clayforge
 
-# 2. See the real showcase (this is the one you want)
+# 2. See the real showcase (the actual beautiful app we built — this is the one you want people to see first)
 clayforge showcase
 ```
+
+(Extras like `[viz,grok]` are optional later if you want real Plotly/DataTable in your own apps or real token streaming from xAI in your GrokChat usage. The core showcase and basic GrokChat/AgentCanvas work great with plain install via graceful sims and SVG fallbacks.)
 
 This launches the full, polished, multi-tab living demo that was built as the primary "hello world" for the project:
 - Dedicated GrokChat tab (real component + beautiful self-contained visual demo)

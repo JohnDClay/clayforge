@@ -83,8 +83,12 @@ dev = [
 ]
 
 # Production usage (most common real-world combination):
-#   pip install "clayforge[viz,grok]"           # beautiful dashboards + REAL GrokChat streaming (needs XAI_API_KEY)
-#   pip install "clayforge[viz,grok,db,auth]"   # full: viz + Grok + auth + db (SQLite/Postgres)
+#   pip install clayforge
+#   clayforge showcase   # the real beautiful demo (no extras needed)
+#
+#   # Optional later for real Plotly/DataTable or real Grok streaming in your own code:
+#   pip install "clayforge[viz,grok]"           # ...
+#   pip install "clayforge[viz,grok,db,auth]"   # ...
 #
 # This gives you beautiful reactive dashboards + first-class GrokChat/AgentCanvas + auth+db.
 # Core framework has zero required heavy dependencies. Extras are strictly additive.
@@ -100,7 +104,7 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/clayforge"]
 # Include the full polished showcase (the hero demo) so `clayforge showcase` works
-# out-of-the-box after `pip install "clayforge[viz,grok]"` (no clone required).
+# out-of-the-box after plain `pip install clayforge` (no extras / no clone required to see the real beautiful showcase).
 # This puts it at importable `clayforge.showcase.app`.
 force-include = { "showcase" = "clayforge/showcase" }
 

@@ -4,8 +4,8 @@
 # Run:
 #   python minimal_starter.py
 #
-# Or after `pip install "clayforge[viz,grok]"`:
-#   clayforge showcase          # <-- THE hero demo (real full showcase)
+# Or after `pip install clayforge`:
+#   clayforge showcase          # <-- THE hero demo (real full beautiful showcase)
 #   clayforge new myapp && cd myapp && clayforge run
 
 import os
