@@ -23,30 +23,69 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 
 ## Quick Start
 
+The fastest way to see what ClayForge actually is:
+
 ```bash
-pip install "clayforge[viz,grok]"   # + XAI_API_KEY for real Grok streaming
-clayforge showcase          # THE showcase: dedicated GrokChat + framework-native Research Swarm (real AgentCanvas + public API, bubble rendition polish; Agent Vision), theming live, dashboards, forms+auth+db sims. (No separate gallery — showcase is our showcase.)
-# Deep real code (copy these patterns):
-python examples/03_grok_chat.py
-python examples/04_multi_agent_vision.py
-# or
-clayforge new myapp && cd myapp && clayforge run
+# 1. Install with the two most useful extras
+pip install "clayforge[viz,grok]"
+
+# 2. See the real showcase (this is the one you want)
+clayforge showcase
 ```
 
-Open http://localhost:8000 — production-quality reactive Tailwind UI with instant WS updates. Pure Python.
+This launches the full, polished, multi-tab living demo that was built as the primary "hello world" for the project:
+- Dedicated GrokChat tab (real component + beautiful self-contained visual demo)
+- Framework-native Research Swarm / Agent Vision tab (real `AgentCanvas` + public API `update_agent_status` / `add_event` / `add_thought`, exactly as you will use it in your own apps)
+- Live dashboards with mutations, forms, theming explorer, etc.
 
-**First-class Grok (three discoverable surfaces):**
-- `examples/03_grok_chat.py` — production example with real `api_key=` / `client=` + `on_message` paths (set `XAI_API_KEY`).
-- `clayforge showcase` — dedicated GrokChat tab (full interactive, nice titles first, zero leakage to other tabs) + direct CTA to richer tester.
-- `examples/03_grok_chat.py` and `examples/04_multi_agent_vision.py` → full real streaming + 4-agent production patterns you copy into your apps. (Showcase has visual-only dedicated tabs for instant "wow" without keys.)
+**No static placeholder. No separate gallery.** The showcase *is* our showcase.
 
-**One-liners that just work today:**
-- Live theming with swatches: `cf.set_theme("light")`, `cf.set_theme(cf.Theme(...))`, or click in `clayforge showcase`
-- GrokChat + AgentCanvas: `from clayforge.grok import GrokChat, AgentCanvas`
-- Auth + DB in one line: `from clayforge import auth, db; auth=auth.Auth(); db=db.Database()`
-- Deploy templates: `clayforge deploy --platform docker -d .` (writes real Dockerfile + more)
+### Minimal Starter (copy-paste)
 
-See `examples/auth_db_todo.py` for complete auth+db+API in action. All extras optional + graceful. `pip install "clayforge[grok]"` unlocks real streaming.
+Save as `app.py` and run with `python app.py` (or `clayforge run`):
+
+```python
+import os
+import clayforge as cf
+from clayforge.grok import GrokChat, AgentCanvas
+
+app = cf.App(title="My Awesome App")
+
+@app.page("/")
+def main_page():
+    cf.ui.title("My Awesome App")
+    cf.ui.subtitle("Pure Python • Beautiful UI • Grok Powered")
+
+    with cf.ui.row(gap="6"):
+        with cf.ui.card(title="Dashboard", classes="flex-1"):
+            cf.ui.text("Everything is working!", size="lg")
+            # Add real buttons, metrics, forms, etc. here
+
+        with cf.ui.card(title="Grok Chat", classes="flex-1"):
+            GrokChat(api_key=os.getenv("XAI_API_KEY"), height="420px")
+
+    with cf.ui.card(title="Agent Canvas"):
+        AgentCanvas(
+            agents=[{"name": "Researcher", "role": "Thinking", "color": "#6366f1"}],
+            height="400px",
+        )
+
+if __name__ == "__main__":
+    app.run()
+```
+
+### Pro Tips (from day one)
+
+- Set `XAI_API_KEY` (in `.env` or env var) for real token-by-token Grok streaming in `GrokChat` and examples.
+- `clayforge new myapp` → clean scaffold + `.env.example`.
+- Best learning path: `clayforge showcase` then copy patterns from:
+  - `examples/03_grok_chat.py`
+  - `examples/04_multi_agent_vision.py` (the canonical production AgentCanvas example)
+  - `examples/00_minimal.py` (the absolute smallest useful starter)
+- Theming: `cf.set_theme("dark")`, `cf.set_theme("light")`, or `cf.set_theme(cf.Theme(...))`.
+- Auth + DB: `from clayforge import auth, db` (one-liners, see `examples/auth_db_todo.py`).
+
+Open http://127.0.0.1:8000 after running any of the above. Everything is reactive over WebSocket. Pure Python.
 
 ## Features
 
@@ -82,16 +121,14 @@ All core works without extras. Grok/viz gracefully degrade with clear instructio
 ## The Showcase (our one living demo surface)
 
 ```bash
-# 🔥 clayforge showcase — the killer demo (live theming, dedicated GrokChat tab, framework-native Research Swarm / real AgentCanvas in Agent Vision tab with bubble polish, dashboards, forms+auth+db, zero boilerplate beauty)
+# The real, full experience (what people should see first)
+pip install "clayforge[viz,grok]"
 clayforge showcase
 ```
 
-See the `examples/` directory (01–09) for production-pattern demos you lift into your apps. Highlights:
-- `03_grok_chat.py` — real Grok streaming + on_message patterns
-- `04_multi_agent_vision.py` — full production AgentCanvas API (update_agent_status + add_event tool cards) + realistic 4-agent pipeline with GrokChat steering
-- Others cover dashboards, auth+db, theming, viz, etc.
+This is the canonical "try before you build" surface. It is intentionally the only big demo surface (gallery was removed per "the showcase is our showcase").
 
-Theming is first-class — see `cf.set_theme`, `App(theme=...)`, and `Theme` in the showcase (and your code) for live examples. (Gallery removed per directive: the showcase is our showcase.)
+See `examples/00_minimal.py`, `examples/03_grok_chat.py`, and especially `examples/04_multi_agent_vision.py` for the production patterns you will actually copy into your own apps.
 
 ## Deployment
 

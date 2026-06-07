@@ -99,6 +99,10 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/clayforge"]
+# Include the full polished showcase (the hero demo) so `clayforge showcase` works
+# out-of-the-box after `pip install "clayforge[viz,grok]"` (no clone required).
+# This puts it at importable `clayforge.showcase.app`.
+force-include = { "showcase" = "clayforge/showcase" }
 
 [tool.ruff]
 line-length = 100

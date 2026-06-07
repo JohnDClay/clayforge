@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] - 2026-06 (Onboarding polish + real `clayforge showcase` after pip install)
+
+- **Major onboarding win**: `clayforge showcase` now works out of the box after a normal `pip install "clayforge[viz,grok]"` (no clone required). The full polished hero demo (dedicated GrokChat + real framework-native AgentCanvas Research Swarm in Agent Vision tab, etc.) is now packaged via `force-include` in pyproject.toml and exposed as `clayforge.showcase`.
+- CLI `showcase` command updated to prefer the packaged `from clayforge.showcase.app` path with a graceful fallback for development. Removed the scary "you must clone" error panel.
+- Added `examples/00_minimal.py` (cleanest possible starter that still demonstrates real GrokChat + AgentCanvas using the public API).
+- Polished root `minimal_starter.py` and the big header comment injected by `clayforge new`.
+- Significantly improved README Quick Start: promotes the real `clayforge showcase` as the #1 thing people should run first, includes accurate minimal copy-paste code, pro tips, and correct commands.
+- All changes pass ruff + targeted pytest (CLI + import) + import/render smoke.
+
 ## [Unreleased] - 2026-06 (User-driven: swarm re-creation + GrokChat un-embed + gallery removal + centering)
 - **GitHub launch**: User: "it worked i think:" followed by successful first push output:
   ```

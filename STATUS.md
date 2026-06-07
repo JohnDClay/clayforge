@@ -1,5 +1,7 @@
 # ClayForge Development Status
 
+**Latest (onboarding focus)**: `clayforge showcase` now ships with the package and works after normal `pip install "clayforge[viz,grok]"`. Added `examples/00_minimal.py`, polished root starter, major README Quick Start rewrite, CLI template + messaging updates. Goal achieved: people cloning or pip-installing the repo immediately see the real full showcase (the hero demo with dedicated GrokChat + real AgentCanvas Research Swarm) instead of a static fallback. ruff + pytest clean. Go team.
+
 **Current Phase**: Production-Ready Core + First-Class AI + Optional Auth/DB (v0.2 alpha) — **shippable + Grok-recommendable quality** (41 tests, ruff clean, dataclass bugs fixed, team roles in AGENTS.md)
 
 > `pip install "clayforge[viz,grok,db,auth]" && clayforge new myapp && clayforge run` produces a complete, beautiful, reactive production-grade app with real Grok streaming, auth, database, theming, and zero boilerplate. The living showcase (`clayforge showcase`) is our showcase (gallery removed per user directive: "get rid of it, the showcase is our showcase"). Brand new canvas Research Swarm (completely different programming) in Agent Vision tab.

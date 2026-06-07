@@ -162,34 +162,33 @@ Run with:
     clayforge run
 
 # =============================================================================
-# NEW TO CLAYFORGE? DISCOVER THE FULL POWER IMMEDIATELY:
+# NEW TO CLAYFORGE? START HERE:
 # =============================================================================
 #
 
-#         Browse every UI primitive, try them live, copy ready-to-paste code.
+#   The single best first command (the real hero demo):
 #
-#   clayforge showcase
-#       → The beautiful multi-section experience (GrokChat, dashboards,
-#         agent vision, forms, theming explorer, and more — all in one app).
+#       clayforge showcase
 #
-# Theming (instant, powerful):
+#   Full polished multi-tab experience with dedicated GrokChat + real
+#   AgentCanvas Research Swarm (Agent Vision tab), live dashboards, etc.
+#   (The showcase *is* our showcase — no separate gallery.)
+#
+# Quick minimal starter: see examples/00_minimal.py
+#
+# Theming:
 #       import clayforge as cf
-#       cf.set_theme(cf.Theme.DARK)   # LIGHT, SYSTEM, or full cf.Theme(...)
-#       # Build and register your own custom components:
-#       cf.register_component(...)
+#       cf.set_theme("dark")     # or "light", cf.Theme(...)
 #
-# Auth + Database (production-grade, zero ceremony):
-#       from clayforge import Auth, Database
-#       auth = Auth()   # @auth.require_login on any @app.page or route
-#       db = Database() # .query() / .execute() — sqlite by default (Postgres ready)
-#       # Concrete protected page + simple query example is shown further down in this header.
+# Auth + DB one-liners:
+#       from clayforge import auth, db
 #
-# Clean, real-world examples (the best learning path):
-#       examples/auth_db_todo.py
-#       examples/internal_crm_with_auth.py
-#       (See the full examples/ folder for patterns you can lift directly.)
+# Best patterns after the showcase:
+#       examples/00_minimal.py
+#       examples/03_grok_chat.py
+#       examples/04_multi_agent_vision.py
 #
-# Everything else stays pure Python with instant reactive updates.
+# Pure Python + instant reactive WS updates.
 # =============================================================================
 """
 
@@ -315,46 +314,50 @@ def run(
 
 @app.command()
 def showcase() -> None:
-    """Launch the official ClayForge Showcase — a beautiful multi-section experience with dedicated GrokChat tab (visual), Research Swarm/Agent Vision tab (Start runs multi-agent demo), dashboards, forms, theming, and more."""
+    """Launch the official ClayForge Showcase — the beautiful multi-section living demo (dedicated GrokChat tab, framework-native Research Swarm / real AgentCanvas in Agent Vision tab, dashboards, forms, theming, and more)."""
     import os
 
     import uvicorn
 
     console.print(
         Panel(
-            "Launching the ClayForge Showcase...\n\n"
-            "Beautiful multi-section demo with dedicated tabs: GrokChat (visual-only with canned responses) and Agent Vision (static Research Swarm viz). Other sections cover theming, forms, live dashboard, etc. Use sidebar to switch.",
+            "Launching the ClayForge Showcase — our hero demo.\n\n"
+            "Dedicated tabs: GrokChat + framework-native Agent Vision (real AgentCanvas + public API, bubble polish).\n"
+            "Dashboards with live mutations, forms, theming, and more. Pure Python. Zero boilerplate.",
             title="[bold cyan]ClayForge Showcase[/bold cyan]",
             border_style="cyan",
         )
     )
 
-    # We must always run through clayforge.core.server (the real ASGI app),
-    # and mount the showcase ClayForgeApp into it. Directly passing
-    # "showcase.app:app" to uvicorn fails because ClayForgeApp is not ASGI.
+    # Always run through the central server so WS, theming, and the full ClayForge
+    # rendering pipeline are active. We mount the real App instance.
     try:
         from clayforge.core.app import App as ClayForgeApp
         from clayforge.core.server import set_current_app
-        from showcase.app import app as showcase_cf_app
 
-        if isinstance(showcase_cf_app, ClayForgeApp):
+        # Preferred path after `pip install "clayforge[...]"` (packaged via force-include in pyproject.toml).
+        # Falls back to development root `showcase/` when running from the git checkout.
+        showcase_cf_app = None
+        try:
+            from clayforge.showcase.app import app as showcase_cf_app  # packaged path
+        except ImportError:
+            from showcase.app import app as showcase_cf_app  # dev root path
+
+        if showcase_cf_app is not None and isinstance(showcase_cf_app, ClayForgeApp):
             set_current_app(showcase_cf_app)
-            os.environ["CLAYFORGE_APP"] = "showcase.app:app"
-    except Exception:  # noqa: BLE001
+            os.environ["CLAYFORGE_APP"] = "clayforge.showcase.app:app"
+    except Exception as exc:  # noqa: BLE001
         console.print(
             Panel(
-                "[yellow]Showcase demo modules not importable from current PYTHONPATH.[/yellow]\n\n"
-                "The full `clayforge showcase` experience is the rich, self-hosted "
-                "living demos that live in the ClayForge source repository.\n\n"
-                "[bold]Recommended for full exploration:[/bold]\n"
+                f"[yellow]Could not load the full showcase.[/yellow]\n\n{exc}\n\n"
+                "Quick alternatives:\n"
+                "  clayforge new myapp && cd myapp && clayforge run\n"
+                "  python -m clayforge run --app examples.03_grok_chat:app\n\n"
+                "For the complete experience from source:\n"
                 "  git clone https://github.com/JohnDClay/clayforge\n"
                 "  cd clayforge\n"
-                '  pip install -e ".[viz,grok,db,auth]"\n'
-                "  python -m clayforge showcase\n\n"
-                "After a plain `pip install clayforge`, use:\n"
-                "  clayforge new myapp && cd myapp && clayforge run\n"
-                "  clayforge deploy --help\n\n"
-                "(Advanced: PYTHONPATH=/path/to/clayforge-repo still works.)",
+                '  pip install -e ".[viz,grok]"\n'
+                "  python -m clayforge showcase",
                 title="[bold cyan]ClayForge Showcase[/bold cyan]",
                 border_style="cyan",
             )
