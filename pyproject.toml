@@ -106,7 +106,7 @@ packages = ["src/clayforge"]
 # Include the full polished showcase (the hero demo) so `clayforge showcase` works
 # out-of-the-box after plain `pip install clayforge` (no extras / no clone required to see the real beautiful showcase).
 # This puts it at importable `clayforge.showcase.app`.
-force-include = { "showcase" = "clayforge/showcase" }
+force-include = { "showcase" = "clayforge/showcase", "showcase_demo.py" = "clayforge/showcase_demo.py" }
 
 [tool.ruff]
 line-length = 100

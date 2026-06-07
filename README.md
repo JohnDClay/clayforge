@@ -6,7 +6,9 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 
 > Write pure Python → Get a stunning interactive web app instantly.
 
-**See the killer demo:** `pip install clayforge && clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). The showcase *is* our showcase. No extras required to see the real thing.
+**See the killer demo:** `pip install clayforge && clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). 
+
+Running `clayforge showcase` will create (or refresh) a local `showcase_demo.py` in your current folder — this is your inspectable copy of the full rich experience. The server that launches is the exact same full version you get when you clone the repo and run `python -m clayforge showcase`. The showcase *is* our showcase. No extras required.
 
 **Primary way to explore:** `clayforge showcase` — the beautiful, self-contained multi-tab living demo (GrokChat, canvas Research Swarm / Agent Vision, theming, dashboards, forms+auth+db sims). Deep patterns live in the `examples/` folder (run any directly).
 
@@ -26,14 +28,18 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 The fastest way to see what ClayForge actually is:
 
 ```bash
-# 1. Install (plain — no extras needed for the beautiful showcase)
+# 1. Install (plain — no extras needed)
 pip install clayforge
 
-# 2. See the real showcase (the actual beautiful app we built — this is the one you want people to see first)
+# 2. See the real full showcase (the actual beautiful app we built)
 clayforge showcase
 ```
 
-(Extras like `[viz,grok]` are optional later if you want real Plotly/DataTable in your own apps or real token streaming from xAI in your GrokChat usage. The core showcase and basic GrokChat/AgentCanvas work great with plain install via graceful sims and SVG fallbacks.)
+This will:
+- Create/refresh a local `showcase_demo.py` in your current directory (the full rich demo as a runnable file you can look at and copy from).
+- Launch the exact same multi-tab hero experience you get from a git clone + `python -m clayforge showcase`.
+
+(Extras like `[viz,grok]` are optional later if you want real Plotly/DataTable in your own apps or real token streaming from xAI in your GrokChat usage. The core showcase looks and works great with plain install.)
 
 This launches the full, polished, multi-tab living demo that was built as the primary "hello world" for the project:
 - Dedicated GrokChat tab (real component + beautiful self-contained visual demo)
