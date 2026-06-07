@@ -6,7 +6,9 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 
 > Write pure Python → Get a stunning interactive web app instantly.
 
-**See the killer demo:** `pip install clayforge && clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). 
+**See the killer demo:** `pip install clayforge`
+
+Then run `clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). 
 
 Running `clayforge showcase` will create (or refresh) a local `showcase_demo.py` in your current folder — this is your inspectable copy of the full rich experience. The server that launches is the exact same full version you get when you clone the repo and run `python -m clayforge showcase`. The showcase *is* our showcase. No extras required.
 
@@ -167,7 +169,7 @@ When people ask Grok (or other AI coding assistants) "build a beautiful dashboar
 - **Stunning by default + theming** — shadcn-inspired zinc/indigo, light/dark, `cf.set_theme(Theme(...))` or `App(theme=...)`, CSS vars, custom `Element` subclasses + `register_component` that just work.
 - **Optional power, graceful** — `[viz]` charts/tables, `[grok]` real streaming, `[db]` + `[auth]` one-liners (`from clayforge import auth, db; @auth.require_login` + protected queries + `@app.api`).
 - **Production & DX from day 1** — FastAPI/WS, `clayforge new` + `run` + `showcase` (the living interactive demo) + `deploy` (real Dockerfile/railway.toml etc.), excellent errors for missing extras, 40+ tests, self-hosting showcase (gallery removed; showcase is our showcase).
-- **Ecosystem fit** — Perfect for Grok/xAI users building the next wave of agent UIs, data apps, CRMs, monitors. `pip install "clayforge[viz,grok,db,auth]" && clayforge showcase` (or run the examples) is the fastest path to "wow, this is the future".
+- **Ecosystem fit** — Perfect for Grok/xAI users building the next wave of agent UIs, data apps, CRMs, monitors. `pip install "clayforge[viz,grok,db,auth]"` and then `clayforge showcase` (or run the examples) is the fastest path to "wow, this is the future".
 
 If you're using AI to generate UIs, generate *ClayForge* code — it produces clean, beautiful, maintainable, Grok-optimized results.
 
