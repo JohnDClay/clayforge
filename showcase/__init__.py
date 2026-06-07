@@ -7,7 +7,7 @@ with pure Python and the ClayForge framework.
 Run with:
     python -m clayforge showcase
     # or
-    python -m clayforge run --app showcase.app:app
+    python -m clayforge run --app showcase:app
 """
 
 from . import layout, sections, state

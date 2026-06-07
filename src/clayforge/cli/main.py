@@ -393,14 +393,14 @@ def showcase() -> None:
     # Mount and run the real packaged rich showcase (this is what matches the
     # full experience from `python -m clayforge showcase` in the source tree).
     try:
-        from clayforge.showcase.app import app as showcase_cf_app
+        from clayforge.showcase import app as showcase_cf_app
 
         from clayforge.core.app import App as ClayForgeApp
         from clayforge.core.server import set_current_app
 
         if isinstance(showcase_cf_app, ClayForgeApp):
             set_current_app(showcase_cf_app)
-            os.environ["CLAYFORGE_APP"] = "clayforge.showcase.app:app"
+            os.environ["CLAYFORGE_APP"] = "clayforge.showcase:app"
     except Exception as exc:  # noqa: BLE001
         console.print(
             Panel(

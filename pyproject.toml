@@ -105,7 +105,7 @@ build-backend = "hatchling.build"
 packages = ["src/clayforge"]
 # Include the full polished showcase (the hero demo) so `clayforge showcase` works
 # out-of-the-box after plain `pip install clayforge` (no extras / no clone required to see the real beautiful showcase).
-# This puts it at importable `clayforge.showcase.app`.
+# This puts it at importable `clayforge.showcase` (with `app` exposed from __init__).
 force-include = { "showcase" = "clayforge/showcase", "showcase_demo.py" = "clayforge/showcase_demo.py" }
 
 [tool.ruff]

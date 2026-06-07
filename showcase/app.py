@@ -5,7 +5,7 @@ A single beautiful experience that demonstrates what people can build.
 
 Run:
     python -m clayforge showcase
-    python -m clayforge run --app showcase.app:app
+    python -m clayforge run --app showcase:app
 
 Modular architecture:
 - layout.py: all chrome (sidebar, topbar, styles, scripts, collapse logic)
