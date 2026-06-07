@@ -386,7 +386,7 @@ def test_custom_element_direct_instantiation_and_auto_attach():
 
 def test_showcase_render_forms_contains_auth_db_demo_card_and_js_handlers():
     """The first-class live auth+db demo card is present in the forms section HTML."""
-    from showcase.sections.forms import render_forms
+    from clayforge.showcase.sections.forms import render_forms
 
     html = render_forms()
 
@@ -503,7 +503,7 @@ def test_showcase_render_forms_contains_auth_db_demo_card_and_js_handlers():
 
 def test_showcase_overview_teaser_links_to_auth_db_forms_section():
     """Overview teaser for the new first-class auth+db feature correctly links to the forms demo card."""
-    from showcase.sections.overview import render_overview
+    from clayforge.showcase.sections.overview import render_overview
 
     html = render_overview()
 
@@ -580,8 +580,8 @@ def test_showcase_grok_agents_sections_support_heavy_and_light_paths():
     - No cross-contamination (no swarm-canvas strings, no old canvas sim labels).
     """
     from clayforge.grok import AgentCanvas, GrokChat
-    from showcase.sections.agents import render_agents
-    from showcase.sections.grok import render_grok
+    from clayforge.showcase.sections.agents import render_agents
+    from clayforge.showcase.sections.grok import render_grok
 
     # Grok tab (always the new demo now)
     lg = render_grok()

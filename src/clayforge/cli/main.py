@@ -392,15 +392,16 @@ def showcase() -> None:
 
     # Mount and run the real packaged rich showcase (this is what matches the
     # full experience from `python -m clayforge showcase` in the source tree).
+    loaded = False
     try:
-        from clayforge.showcase import app as showcase_cf_app
-
         from clayforge.core.app import App as ClayForgeApp
         from clayforge.core.server import set_current_app
+        from clayforge.showcase import app as showcase_cf_app
 
         if isinstance(showcase_cf_app, ClayForgeApp):
             set_current_app(showcase_cf_app)
             os.environ["CLAYFORGE_APP"] = "clayforge.showcase:app"
+            loaded = True
     except Exception as exc:  # noqa: BLE001
         console.print(
             Panel(
@@ -417,22 +418,24 @@ def showcase() -> None:
                 border_style="cyan",
             )
         )
+        raise typer.Exit(1) from None
 
-    try:
-        uvicorn.run(
-            "clayforge.core.server:app",
-            host="127.0.0.1",
-            port=8000,
-            log_level="info",
-        )
-    except OSError as e:
-        if "10048" in str(e) or "address already in use" in str(e).lower():
-            console.print("[red]Port 8000 is already in use.[/red] Kill the previous server or run with a different port.")
-        elif "10013" in str(e) or "access" in str(e).lower():
-            console.print("[red]Access denied binding port 8000.[/red] Try killing other python processes or use a different port.")
-        else:
-            raise
-        raise typer.Exit(1) from e
+    if loaded:
+        try:
+            uvicorn.run(
+                "clayforge.core.server:app",
+                host="127.0.0.1",
+                port=8000,
+                log_level="info",
+            )
+        except OSError as e:
+            if "10048" in str(e) or "address already in use" in str(e).lower():
+                console.print("[red]Port 8000 is already in use.[/red] Kill the previous server or run with a different port.")
+            elif "10013" in str(e) or "access" in str(e).lower():
+                console.print("[red]Access denied binding port 8000.[/red] Try killing other python processes or use a different port.")
+            else:
+                raise
+            raise typer.Exit(1) from e
 
 
 @app.command()
