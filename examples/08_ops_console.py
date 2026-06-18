@@ -31,10 +31,10 @@ Or via CLI (best for iteration):
 Optional (for the health chart + richer tables):
     pip install "clayforge[viz]"
 
-Discoverability & cross-integration:
-- Pairs perfectly with auth+db (see examples/auth_db_todo.py and internal_crm_with_auth.py) for real persisted tickets/customers instead of in-memory STATE (use @require_login on pages + Database for production internal tools).
-- Add optional GrokChat "AI Ops Copilot" exactly as in examples/06_production_viz_dashboard.py.
-- `clayforge showcase` has viz in Dashboard tab; `clayforge gallery` Command Center has live DataTable/Plotly + cross-mutation demos.
+Cross-integration:
+- Pairs perfectly with auth+db (see examples/auth_db_todo.py and internal_crm_with_auth.py) for real persisted data (use @require_login + Database).
+- Add optional GrokChat copilot as in 06.
+- `clayforge showcase` includes viz patterns.
 """
 
 from __future__ import annotations
@@ -480,7 +480,7 @@ def ops_console():
                         "Selection events are wired via <span class='font-mono'>on_select=</span> exactly like button handlers."
                     )
                     cf.ui.text(
-                        "See full production patterns (incl. auth+db persistence + GrokChat copilot) in clayforge gallery Command Center + examples/06 and auth_db_*.py.",
+                        "See full production patterns in examples/06 and auth_db_*.py.",
                         size="xs",
                     )
 

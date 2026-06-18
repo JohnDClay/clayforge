@@ -9,6 +9,7 @@ is an Element. Elements:
 - Know how to produce efficient update payloads for the WS
 - Can register event handlers that the server will call
 - Support context-manager usage for ergonomic layout (with ui.row(): ...)
+- .refresh() + get_client().session_state for clean live state management
 
 Design principles:
 - Minimal magic
@@ -95,7 +96,9 @@ class Element:
         return self
 
     def add_child(self, child: Element) -> Element:
-        self.children.append(child)
+        """Add child idempotently (prevents duplicate renders from double-attach paths)."""
+        if child not in self.children:
+            self.children.append(child)
         return self
 
     # Context manager support: with ui.row(): ui.text("hi")
@@ -157,6 +160,50 @@ class Element:
         if handler:
             return handler(data)
         return None
+
+    def refresh(self) -> None:
+        """Best-effort live re-render of *this* element (and its subtree) over WS.
+
+        Call from inside event handlers (on_click, on_change, etc) after mutating
+        this element's attributes, children, or state.
+
+        This + get_client()/get_session_state() gives you clean component-local
+        or page state without heavy global closures or full-page re-renders.
+
+            def bump():
+                counter_el.content = str(int(counter_el.content) + 1)
+                counter_el.refresh()
+
+        Safe no-op if not connected to a live client.
+        """
+        client = getattr(self, "_client", None)
+        if client is None:
+            # Try the context helper (set during dispatch)
+            try:
+                from .ui import get_client as _get_c
+
+                client = _get_c()
+            except Exception:
+                client = None
+        if client is None:
+            return
+        try:
+            import asyncio
+
+            html = self.to_html()
+            coro = client.send_update(self.id, html)
+            try:
+                loop = asyncio.get_running_loop()
+                if loop.is_running():
+                    loop.create_task(coro)
+                else:
+                    asyncio.run(coro)
+            except RuntimeError:
+                # No running loop (rare outside handler)
+                asyncio.run(coro)
+        except Exception:
+            # Best effort — never break user handler
+            pass
 
     def __repr__(self) -> str:
         return f"<{self.__class__.__name__} id={self.id} children={len(self.children)}>"

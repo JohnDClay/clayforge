@@ -16,6 +16,12 @@ Key exports:
 - ui.badge / ui.divider / ui.text_input / ui.select / ui.checkbox / ui.text_area / ui.file_upload
 - render_page(page_fn) — the heart of real @app.page rendering
 
+State (first-class, zero hacky closures):
+- cf.get_client() / cf.get_session_state() inside handlers gives per-tab state.
+- Element.refresh() after mutations for live targeted updates.
+- ui.select(..., on_change=fn), ui.checkbox(..., on_change=fn) etc now supported (value/checked passed).
+- See get_client() and Element.refresh() docs for clean examples.
+
 Theming & Custom Components (new foundation):
 - Full custom component system via `cf.register_component(MyWidget)`
   After registration: `ui.mywidget(...)` works exactly like built-ins.
@@ -32,6 +38,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import contextmanager
+from contextvars import ContextVar
 from typing import Any
 
 from .element import Element
@@ -146,12 +153,12 @@ class UINamespace:
 
     def row(self, gap: str = "4", classes: str = "", **kwargs: Any) -> Row:
         r = Row(gap=gap, classes=classes, **kwargs)
-        _maybe_attach_or_root(r)
+        # attachment handled automatically in Element.__post_init__
         return r
 
     def column(self, gap: str = "3", classes: str = "", **kwargs: Any) -> Column:
         c = Column(gap=gap, classes=classes, **kwargs)
-        _maybe_attach_or_root(c)
+        # attachment handled automatically in Element.__post_init__
         return c
 
     def card(
@@ -162,7 +169,7 @@ class UINamespace:
         **kwargs: Any,
     ) -> Card:
         c = Card(title=title, subtitle=subtitle, classes=classes, **kwargs)
-        _maybe_attach_or_root(c)
+        # attachment handled automatically in Element.__post_init__
         return c
 
     # ------------------------------------------------------------------
@@ -176,12 +183,12 @@ class UINamespace:
             size=size,
             classes=f"font-display tracking-tighter font-semibold text-white {classes}".strip(),
         )
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     def subtitle(self, text: str, classes: str = "") -> Text:
         t = Text(content=text, tag="p", size="lg", classes=f"text-zinc-400 {classes}".strip())
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     def text(self, content: str, size: str = "base", classes: str = "", tag: str = "p") -> Text:
@@ -190,7 +197,7 @@ class UINamespace:
         `tag` allows using div, span, h1, etc. instead of the default <p>.
         """
         t = Text(content=content, size=size, classes=classes, tag=tag)
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     def markdown(self, text: str, classes: str = "") -> Text:
@@ -198,17 +205,22 @@ class UINamespace:
         # can be added by users via custom Element + CDN scripts (or optional dep later).
         # Escapes HTML then applies simple transforms for common cases.
         safe = text.replace("<", "&lt;").replace(">", "&gt;")
-        # very light "markdown"
-        safe = safe.replace("**", "<strong>").replace("**", "</strong>")  # rough
-        safe = safe.replace("*", "<em>").replace("*", "</em>")
-        safe = safe.replace("`", "<code>").replace("`", "</code>")
+        # paired ** for bold
+        parts = safe.split("**")
+        safe = "".join(p if i % 2 == 0 else f"<strong>{p}</strong>" for i, p in enumerate(parts))
+        # paired * for em
+        parts = safe.split("*")
+        safe = "".join(p if i % 2 == 0 else f"<em>{p}</em>" for i, p in enumerate(parts))
+        # paired ` for code
+        parts = safe.split("`")
+        safe = "".join(p if i % 2 == 0 else f"<code>{p}</code>" for i, p in enumerate(parts))
         safe = safe.replace("\n- ", "<br>• ").replace("\n", "<br>")
         t = Text(
             content=safe,
             tag="div",
             classes=f"prose prose-invert text-sm text-zinc-300 max-w-none {classes}",
         )
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     # ------------------------------------------------------------------
@@ -227,7 +239,7 @@ class UINamespace:
         btn = Button(label=label, variant=variant, size=size, classes=classes, **kwargs)
         if on_click:
             btn.on("click", lambda data: on_click())
-        _maybe_attach_or_root(btn)
+        # attachment handled automatically in Element.__post_init__
         return btn
 
     # ------------------------------------------------------------------
@@ -236,12 +248,12 @@ class UINamespace:
 
     def badge(self, text: str, variant: str = "default", classes: str = "") -> Badge:
         b = Badge(text=text, variant=variant, classes=classes)
-        _maybe_attach_or_root(b)
+        # attachment handled automatically in Element.__post_init__
         return b
 
     def divider(self, classes: str = "") -> Divider:
         d = Divider(classes=classes)
-        _maybe_attach_or_root(d)
+        # attachment handled automatically in Element.__post_init__
         return d
 
     def text_input(
@@ -249,10 +261,13 @@ class UINamespace:
         placeholder: str = "Type something...",
         value: str = "",
         classes: str = "",
+        on_change: Callable | None = None,
         **kwargs: Any,
     ) -> TextInput:
         ti = TextInput(placeholder=placeholder, value=value, classes=classes, **kwargs)
-        _maybe_attach_or_root(ti)
+        if on_change:
+            ti.on("change", lambda data: on_change((data or {}).get("value") if isinstance(data, dict) else data))
+        # attachment handled automatically in Element.__post_init__
         return ti
 
     # ------------------------------------------------------------------
@@ -265,19 +280,29 @@ class UINamespace:
         options: list[str] | None = None,
         value: str = "",
         classes: str = "",
+        on_change: Callable | None = None,
         **kwargs: Any,
     ) -> Select:
         s = Select(
             label=label, options=options or ["A", "B"], value=value, classes=classes, **kwargs
         )
-        _maybe_attach_or_root(s)
+        if on_change:
+            s.on("change", lambda data: on_change((data or {}).get("value") if isinstance(data, dict) else data))
+        # attachment handled automatically in Element.__post_init__
         return s
 
     def checkbox(
-        self, label: str = "Option", checked: bool = False, classes: str = "", **kwargs: Any
+        self,
+        label: str = "Option",
+        checked: bool = False,
+        classes: str = "",
+        on_change: Callable | None = None,
+        **kwargs: Any,
     ) -> Checkbox:
         c = Checkbox(label=label, checked=checked, classes=classes, **kwargs)
-        _maybe_attach_or_root(c)
+        if on_change:
+            c.on("change", lambda data: on_change(bool((data or {}).get("checked", (data or {}).get("value") == "on")) if isinstance(data, dict) else bool(data)))
+        # attachment handled automatically in Element.__post_init__
         return c
 
     def text_area(
@@ -286,17 +311,22 @@ class UINamespace:
         value: str = "",
         rows: int = 4,
         classes: str = "",
+        on_change: Callable | None = None,
         **kwargs: Any,
     ) -> TextArea:
         ta = TextArea(placeholder=placeholder, value=value, rows=rows, classes=classes, **kwargs)
-        _maybe_attach_or_root(ta)
+        if on_change:
+            ta.on("change", lambda data: on_change((data or {}).get("value") if isinstance(data, dict) else data))
+        # attachment handled automatically in Element.__post_init__
         return ta
 
     def file_upload(
-        self, label: str = "Choose file", classes: str = "", **kwargs: Any
+        self, label: str = "Choose file", classes: str = "", on_change: Callable | None = None, **kwargs: Any
     ) -> FileUpload:
         fu = FileUpload(label=label, classes=classes, **kwargs)
-        _maybe_attach_or_root(fu)
+        if on_change:
+            fu.on("change", lambda data: on_change((data or {}).get("value") if isinstance(data, dict) else data))
+        # attachment handled automatically in Element.__post_init__
         return fu
 
     # ------------------------------------------------------------------
@@ -309,7 +339,7 @@ class UINamespace:
             tag="div",
             classes="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-emerald-500/10 text-emerald-400 text-sm font-medium border border-emerald-500/30",
         )
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     def footer(self, text: str) -> Text:
@@ -318,7 +348,7 @@ class UINamespace:
             tag="div",
             classes="text-[10px] text-zinc-500 mt-8 pt-4 border-t border-zinc-800",
         )
-        _maybe_attach_or_root(t)
+        # attachment handled automatically in Element.__post_init__
         return t
 
     def expander(self, title: str, classes: str = "") -> Any:
@@ -377,6 +407,70 @@ def _push_context(element: Element) -> None:
     _context_stack.append(element)
 
 
+# Per-client context for event handlers (set by server during dispatch).
+# Powers first-class state without hacky module closures for multi-user apps.
+_cf_current_client: ContextVar[Any | None] = ContextVar("_cf_current_client", default=None)
+
+
+def get_client() -> Any | None:
+    """Return the current live Client during event handlers (WS roundtrips).
+
+    This is the clean, first-class primitive for per-client / per-user state.
+
+    Usage (no more hacky top-level closures for everything):
+        import clayforge as cf
+
+        def handle_select(data):
+            client = cf.get_client()
+            if client:
+                client.session_state["priority"] = data.get("value")
+                # mutate elements you hold or use client.session_state in next renders
+                cf.ui.success(f"Stored: {client.session_state['priority']}")
+
+        sel = cf.ui.select("Priority", ["Low", "High"], on_change=handle_select)
+
+    For components that support live updates (or your custom Element):
+        my_card.refresh()   # after mutating attributes/children
+
+    See also: Element.refresh(), client.session_state (plain dict, survives reloads for that tab).
+    Falls back to None outside a live handler (safe).
+    """
+    try:
+        return _cf_current_client.get()
+    except Exception:
+        return None
+
+
+def get_session_state() -> dict:
+    """Return (or create) the current client's session_state dict.
+
+    Perfect for simple page/component state without globals/closures:
+        st = cf.get_session_state()
+        st["counter"] = st.get("counter", 0) + 1
+    """
+    client = get_client()
+    if client is not None and hasattr(client, "session_state"):
+        if not isinstance(client.session_state, dict):
+            client.session_state = {}
+        return client.session_state
+    return {}  # safe fallback (e.g. during initial render or tests)
+
+
+def _set_current_client(client: Any | None) -> Any:
+    """Internal: set the contextvar for the duration of a handler/ready.
+    Returns a token for reset (use in try/finally).
+    """
+    return _cf_current_client.set(client)
+
+
+def _reset_current_client(token: Any) -> None:
+    """Internal reset for contextvar."""
+    try:
+        _cf_current_client.reset(token)
+    except Exception:
+        pass
+
+
 def _pop_context() -> None:
     """Pop on context exit. Safe no-op if empty."""
     if _context_stack:
@@ -425,6 +519,11 @@ def render_page(page_fn: Callable[[], Any]) -> tuple[str, list[Element]]:
     This is the key primitive that turns pure-Python page descriptions into
     real server-rendered DOM that supports WS-driven events.
 
+    Bare `page` and multi-page (`/`, `/foo`, etc) are fully supported and reliable.
+    WS "ready" sends current location.pathname so the right page is activated live.
+
+    Double-render safe: the internal _page_render_context saves/restores stacks.
+
     Returns:
         (combined_html, all_elements) where:
           - combined_html is the concatenated .to_html() of top-level roots
@@ -452,7 +551,8 @@ def render_page(page_fn: Callable[[], Any]) -> tuple[str, list[Element]]:
                 tag="div",
                 classes="text-red-400 bg-red-950/60 border border-red-900 rounded-3xl p-6 font-mono text-sm",
             )
-            _current_roots.append(err)
+            _current_roots.clear()
+            _current_roots.append(err)  # replace any partial roots to avoid dup error text/HTML
 
         # Support `return ui.column(...)` or similar advanced patterns
         if isinstance(retval, Element) and retval not in _current_roots:
@@ -493,4 +593,6 @@ __all__ = [
     "render_page",
     "register_component",
     "get_registered_components",
+    "get_client",
+    "get_session_state",
 ]

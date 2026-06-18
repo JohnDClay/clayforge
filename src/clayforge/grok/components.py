@@ -121,46 +121,56 @@ class GrokChat(Element):
     def __post_init__(self) -> None:
         super().__post_init__()
 
-        # Enable beautiful direct usage: GrokChat(...) works at top level of @app.page
-        # and also correctly nests when called inside `with ui.card():`, `with ui.row():` etc.
+        # Note: self attached via Element base. Temporarily push to own any sub controls
+        # created below (prevents them auto-attaching to caller's outer context e.g. a Card).
+        _did_push = False
         try:
-            from ..core.ui import _maybe_attach_or_root
+            from ..core.ui import _pop_context, _push_context
 
-            _maybe_attach_or_root(self)
+            _push_context(self)
+            _did_push = True
         except Exception:
-            pass  # graceful — still works if attached manually
+            pass
 
-        # Persistent live sub-elements for event routing (registered via our children list)
-        # Their .to_html() is injected manually into our custom chat layout.
-        if self.show_input:
-            self._input_el = TextInput(
-                placeholder=self.placeholder,
-                value="",
-                classes=(
-                    "flex-1 bg-zinc-950 border border-zinc-700 focus:border-indigo-500/60 "
-                    "text-sm text-zinc-200 placeholder:text-zinc-500 rounded-3xl px-4 py-3 "
-                    "focus:outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
-                ),
-            )
-            self._input_el.on("change", self._handle_draft_change)
+        try:
+            # Persistent live sub-elements for event routing (registered via our children list)
+            # Their .to_html() is injected manually into our custom chat layout.
+            if self.show_input:
+                self._input_el = TextInput(
+                    placeholder=self.placeholder,
+                    value="",
+                    classes=(
+                        "flex-1 bg-zinc-950 border border-zinc-700 focus:border-indigo-500/60 "
+                        "text-sm text-zinc-200 placeholder:text-zinc-500 rounded-3xl px-4 py-3 "
+                        "focus:outline-none focus:ring-1 focus:ring-indigo-500/30 transition-all"
+                    ),
+                )
+                self._input_el.on("change", self._handle_draft_change)
 
-            self._send_btn = Button(
-                label="Send",
-                variant="primary",
-                size="md",
-                classes=(
-                    "rounded-3xl px-6 font-semibold flex-shrink-0 shadow-sm "
-                    "active:scale-[0.985] transition-all"
-                ),
-            )
-            self._send_btn.on("click", self._handle_send)
+                self._send_btn = Button(
+                    label="Send",
+                    variant="primary",
+                    size="md",
+                    classes=(
+                        "rounded-3xl px-6 font-semibold flex-shrink-0 shadow-sm "
+                        "active:scale-[0.985] transition-all"
+                    ),
+                )
+                self._send_btn.on("click", self._handle_send)
 
-            # Add to children so render_page() + traverse registers them for WS events.
-            # Visual placement is 100% controlled by our to_html() — this is only for registration.
-            if self._input_el not in self.children:
-                self.children.append(self._input_el)
-            if self._send_btn not in self.children:
-                self.children.append(self._send_btn)
+                # Add to children (idempotent via element.add_child) for registration.
+                # Visuals controlled in to_html.
+                if self._input_el not in self.children:
+                    self.children.append(self._input_el)
+                if self._send_btn not in self.children:
+                    self.children.append(self._send_btn)
+        finally:
+            if _did_push:
+                try:
+                    from ..core.ui import _pop_context
+                    _pop_context()
+                except Exception:
+                    pass
 
         # Real streaming client wiring (api_key or explicit client) — lazy + graceful
         self._grok_client: Any | None = None
@@ -771,74 +781,86 @@ class AgentCanvas(Element):
     def __post_init__(self):
         super().__post_init__()
 
+        # Note: self attached via base. Push temporarily for control buttons so they become
+        # children of this canvas (not leaked to any outer ui context active at creation time).
+        _did_push = False
         try:
-            from ..core.ui import _maybe_attach_or_root
+            from ..core.ui import _pop_context, _push_context
 
-            _maybe_attach_or_root(self)
+            _push_context(self)
+            _did_push = True
         except Exception:
             pass
 
-        self._mermaid_id = f"mermaid_{self.id}"
+        try:
+            self._mermaid_id = f"mermaid_{self.id}"
 
-        if not self.agents:
-            self.agents = [
-                {"name": "Researcher", "role": "Deep research", "color": "#6366f1"},
-                {"name": "WebSearch", "role": "Tool calling", "color": "#10b981"},
-                {"name": "Critic", "role": "Quality & contradictions", "color": "#f59e0b"},
-                {"name": "Synthesizer", "role": "Final output", "color": "#8b5cf6"},
-            ]
+            if not self.agents:
+                self.agents = [
+                    {"name": "Researcher", "role": "Deep research", "color": "#6366f1"},
+                    {"name": "WebSearch", "role": "Tool calling", "color": "#10b981"},
+                    {"name": "Critic", "role": "Quality & contradictions", "color": "#f59e0b"},
+                    {"name": "Synthesizer", "role": "Final output", "color": "#8b5cf6"},
+                ]
 
-        # Snapshot initial team for _handle_reset (so dynamic add_agent spawns during long demos can be trimmed back for repeatable runs)
-        if not hasattr(self, "_initial_agents") or not self._initial_agents:
-            self._initial_agents = [dict(a) for a in self.agents]
+            # Snapshot initial team for _handle_reset (so dynamic add_agent spawns during long demos can be trimmed back for repeatable runs)
+            if not hasattr(self, "_initial_agents") or not self._initial_agents:
+                self._initial_agents = [dict(a) for a in self.agents]
 
-        # Initialize rich per-agent live state (drives pills + dynamic graph)
-        # 'recent_activity' exposes 'activity' data for AI-native viz (status/thought/tool/spawn) so JS enhancer
-        # can drive real-time effects (data-flows, particles/rings, color flashes) synced to thoughts/tools/status.
-        # This makes the live collab chart feel alive for research swarm / agentic team visualization.
-        if not self.agent_states:
-            for a in self.agents:
-                name = a["name"]
-                self.agent_states[name] = {
-                    "status": "idle",
-                    "detail": "",
-                    "color": a.get("color", "#64748b"),
-                    "last_ts": _now_ts(),
-                    "alive": False,
-                    "recent_activity": "idle",
-                    "activity_ts": _now_ts(),
-                }
+            # Initialize rich per-agent live state (drives pills + dynamic graph)
+            # 'recent_activity' exposes 'activity' data for AI-native viz (status/thought/tool/spawn) so JS enhancer
+            # can drive real-time effects (data-flows, particles/rings, color flashes) synced to thoughts/tools/status.
+            # This makes the live collab chart feel alive for research swarm / agentic team visualization.
+            if not self.agent_states:
+                for a in self.agents:
+                    name = a["name"]
+                    self.agent_states[name] = {
+                        "status": "idle",
+                        "detail": "",
+                        "color": a.get("color", "#64748b"),
+                        "last_ts": _now_ts(),
+                        "alive": False,
+                        "recent_activity": "idle",
+                        "activity_ts": _now_ts(),
+                    }
 
-        if not self.thoughts:
-            self.thoughts = [
-                {
-                    "agent": "Researcher",
-                    "text": "Starting deep research on the query...",
-                    "ts": _now_ts(),
-                    "type": "thought",
-                },
-            ]
+            if not self.thoughts:
+                self.thoughts = [
+                    {
+                        "agent": "Researcher",
+                        "text": "Starting deep research on the query...",
+                        "ts": _now_ts(),
+                        "type": "thought",
+                    },
+                ]
 
-        # Controls (registered for WS routing, layout controlled in to_html)
-        if self.show_controls:
-            self._play_btn = Button(
-                label="▶ Start", variant="primary", classes="rounded-2xl text-sm px-4"
-            )
-            self._play_btn.on("click", self._handle_play_pause)
+            # Controls (registered for WS routing, layout controlled in to_html)
+            if self.show_controls:
+                self._play_btn = Button(
+                    label="▶ Start", variant="primary", classes="rounded-2xl text-sm px-4"
+                )
+                self._play_btn.on("click", self._handle_play_pause)
 
-            self._inject_btn = Button(
-                label="Inject Guidance", variant="secondary", classes="rounded-2xl text-sm px-4"
-            )
-            self._inject_btn.on("click", self._handle_inject)
+                self._inject_btn = Button(
+                    label="Inject Guidance", variant="secondary", classes="rounded-2xl text-sm px-4"
+                )
+                self._inject_btn.on("click", self._handle_inject)
 
-            self._reset_btn = Button(
-                label="Reset", variant="ghost", classes="rounded-2xl text-sm px-4"
-            )
-            self._reset_btn.on("click", self._handle_reset)
+                self._reset_btn = Button(
+                    label="Reset", variant="ghost", classes="rounded-2xl text-sm px-4"
+                )
+                self._reset_btn.on("click", self._handle_reset)
 
-            for btn in (self._play_btn, self._inject_btn, self._reset_btn):
-                if btn not in self.children:
-                    self.children.append(btn)
+                for btn in (self._play_btn, self._inject_btn, self._reset_btn):
+                    if btn not in self.children:
+                        self.children.append(btn)
+        finally:
+            if _did_push:
+                try:
+                    from ..core.ui import _pop_context
+                    _pop_context()
+                except Exception:
+                    pass
 
     # ------------------------------------------------------------------
     # Public orchestration API — drive this from real agent loops (the key upgrade)

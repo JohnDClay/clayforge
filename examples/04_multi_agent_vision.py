@@ -21,13 +21,9 @@ Run:
 Then click Launch Mission. Watch the canvas come alive with real status changes,
 tool events, and graph highlights. Use the chat or Inject button to steer live.
 
-For the richest live experience of the full public API (multiple simultaneous canvases + Command Center controls), run:
-    clayforge gallery
-and use the "Demo Full AgentCanvas API" button in the Command Center.
-
-Discoverability in the surfaces:
-- `clayforge showcase` — clean dedicated tab: the full interactive Research Swarm (AgentCanvas with update_agent_status + add_event + dynamic graph) appears ONLY in the "Agent Vision" tab (nice title + prose first, full controls). Zero leakage to other sections. GrokChat is isolated to its own tab.
-- `clayforge gallery` — deepest (two simultaneous AgentCanvases + cross-mutation from Command Center using the exact production public API).
+Discoverability:
+- `clayforge showcase` — the full interactive Research Swarm (AgentCanvas + public API) appears ONLY in the dedicated "Agent Vision" tab (title + prose first, full controls). GrokChat isolated to its tab.
+- Use this example directly for production multi-agent patterns (AgentCanvas public API + GrokChat steering).
 """
 
 from __future__ import annotations

@@ -10,11 +10,11 @@ Beautiful, modern UIs by default. Zero boilerplate. Reactive, efficient, and pur
 
 Then run `clayforge showcase` — the full beautiful multi-tab living demo (dedicated GrokChat + framework-native Research Swarm using real AgentCanvas + public API in Agent Vision tab, theming, dashboards, forms+auth+db). 
 
-Running `clayforge showcase` will create (or refresh) a local `showcase_demo.py` in your current folder — this is your inspectable copy of the full rich experience. The server that launches is the exact same full version you get when you clone the repo and run `python -m clayforge showcase`. The showcase *is* our showcase. No extras required.
+Running `clayforge showcase` will create (or refresh) a local `showcase_demo.py` in your current folder — this is your inspectable copy of the full rich experience. It then launches the demo using the installed package. The showcase *is* our showcase. No extras required.
 
-**Primary way to explore:** `clayforge showcase` — the beautiful, self-contained multi-tab living demo (GrokChat, canvas Research Swarm / Agent Vision, theming, dashboards, forms+auth+db sims). Deep patterns live in the `examples/` folder (run any directly).
+**Primary way to explore:** `clayforge showcase` — the beautiful, self-contained multi-tab living demo (GrokChat, canvas Research Swarm / Agent Vision, theming, dashboards, forms+auth+db sims). Deep production patterns live in the `examples/` folder (run any directly).
 
-**New in 0.1.0:** First-class `clayforge gallery`/`docs` CLI, richer auth+db live demo in showcase, hands-on Protected Query Demo in docs_app playground, theming (live swatches + `cf.set_theme`/`Theme`), auth+db as optional one-line modules (`from clayforge import auth, db`), real `clayforge deploy` with packaged templates, deeper showcase + docs_app, full viz + grok components. All dogfooded.
+**Key surfaces:** `clayforge showcase` (the living multi-tab demo), `examples/` (production copy-paste patterns), `clayforge new` + `run` for your own apps. Theming, auth+db, Grok, viz all first-class. All dogfooded. No gallery.
 
 ## Why ClayForge?
 
@@ -105,9 +105,9 @@ Open http://127.0.0.1:8000 after running any of the above. Everything is reactiv
 - First-class Grok streaming (real + sim) + tool-calling components (three discoverable surfaces)
 - Theming (Theme + set_theme + App(theme=...) + CSS vars), custom component registration, excellent error messages for optional deps
 - One-click optional auth (cookie/session), clean SQLite + Postgres helpers (async-friendly), and dead-simple `@app.api()` route generation
-- CLI: new, run, showcase (the living demo), deploy (with rich platform guidance)
-- 9 high-quality example apps included (see `examples/auth_db_todo.py` for the full auth+db+API pattern)
-- Self-hosting interactive documentation & component gallery
+- CLI: new (clean scaffolds with multi-page support), run (robust discovery), showcase (writes inspectable demo file + launches full experience), deploy (real templates)
+- Solid example apps included (see `examples/auth_db_todo.py` for auth+db+API + multi-page; `examples/04_multi_agent_vision.py` for production AgentCanvas)
+- Self-hosting interactive demo via `clayforge showcase` (the hero surface)
 
 ## Installation
 
@@ -124,7 +124,7 @@ pip install "clayforge[db]"         # SQLite (always) + SQLModel/Postgres async
 pip install "clayforge[auth]"       # Stronger sessions (itsdangerous)
 ```
 
-**Production combo:** `pip install "clayforge[viz,grok,db,auth]"` — or start with `[viz,grok]`. Core tiny; everything optional + graceful. Set `XAI_API_KEY` to activate real streaming in 03 example, showcase dedicated GrokChat tab, or gallery Playground tester.
+**Production combo:** `pip install "clayforge[viz,grok,db,auth]"` — or start with `[viz,grok]`. Core tiny; everything optional + graceful. Set `XAI_API_KEY` to activate real streaming in 03 example or showcase dedicated GrokChat tab.
 
 All core works without extras. Grok/viz gracefully degrade with clear instructions (see `clayforge deploy`).
 
@@ -168,14 +168,14 @@ When people ask Grok (or other AI coding assistants) "build a beautiful dashboar
 - **AI-native first** — `GrokChat` (real token streaming from xAI or perfect sim + tool cards), `AgentCanvas` (live graph + thought stream + rich `add_event` for tools, `update_agent_status`). Three discoverable surfaces (examples, dedicated showcase tabs with framework-native Research Swarm using real AgentCanvas + public API for Agent Vision — styled close to bubble rendition while fully buildable with the framework).
 - **Stunning by default + theming** — shadcn-inspired zinc/indigo, light/dark, `cf.set_theme(Theme(...))` or `App(theme=...)`, CSS vars, custom `Element` subclasses + `register_component` that just work.
 - **Optional power, graceful** — `[viz]` charts/tables, `[grok]` real streaming, `[db]` + `[auth]` one-liners (`from clayforge import auth, db; @auth.require_login` + protected queries + `@app.api`).
-- **Production & DX from day 1** — FastAPI/WS, `clayforge new` + `run` + `showcase` (the living interactive demo) + `deploy` (real Dockerfile/railway.toml etc.), excellent errors for missing extras, 40+ tests, self-hosting showcase (gallery removed; showcase is our showcase).
+- **Production & DX from day 1** — FastAPI/WS, `clayforge new` + `run` + `showcase` (the living interactive demo) + `deploy` (real Dockerfile/railway.toml etc.), excellent errors for missing extras, 40+ tests, self-hosting showcase (showcase is our showcase).
 - **Ecosystem fit** — Perfect for Grok/xAI users building the next wave of agent UIs, data apps, CRMs, monitors. `pip install "clayforge[viz,grok,db,auth]"` and then `clayforge showcase` (or run the examples) is the fastest path to "wow, this is the future".
 
 If you're using AI to generate UIs, generate *ClayForge* code — it produces clean, beautiful, maintainable, Grok-optimized results.
 
 ## Status
 
-**v0.2.0-alpha — ready for serious use.** Real Grok streaming (three discoverable surfaces), production AgentCanvas API (`update_agent_status` + rich `add_event` tool cards) with canonical 4-agent example, first-class auth+db, full theming + custom components, the showcase (with framework-native Research Swarm in Agent Vision tab using real AgentCanvas + public API + bubble polish for close-to-canvas look; gallery removed per user: "the showcase is our showcase"), and 28+ deep tests. All major waves complete and live. See CHANGELOG.md. High DX + visual bar maintained.
+**v0.2.0-alpha — framework solid, GitHub-ready.** `clayforge new` produces clean working apps (multi-page, forms, state, bare `page` support). `clayforge showcase` writes `showcase_demo.py` to your project + launches the full rich multi-tab demo (GrokChat + real AgentCanvas Research Swarm in dedicated tab). Core: reactive WS, first-class Grok/AgentCanvas public API, optional auth+db+viz, theming. Examples are clean core references (no gallery). Tests green, e2e new/run/render solid. See CHANGELOG.md. High DX + visual bar.
 
 ## Contributing
 

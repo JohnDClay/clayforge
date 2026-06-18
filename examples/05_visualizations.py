@@ -17,10 +17,10 @@ Run:
 Requires (for full demo):
     pip install "clayforge[viz]"
 
-Discoverability & cross-integration:
-- `clayforge showcase` — PlotlyChart + DataTable live in the Dashboard tab (real demo + marketing).
-- `clayforge gallery` — deep interactive viz + Command Center mutators (see also 06 for full production surface).
-- Combine with GrokChat/AgentCanvas (exact same .update_* contract) or auth+db for persisted data. See examples/06_production_viz_dashboard.py (Data Copilot) and 07.
+Cross-integration:
+- Use with GrokChat/AgentCanvas (exact same .update_* contract) or auth+db for persisted data.
+- See `clayforge showcase` (Dashboard tab) and examples/06, 07 for production patterns.
+- Standalone: run this for pure viz components.
 """
 
 from __future__ import annotations

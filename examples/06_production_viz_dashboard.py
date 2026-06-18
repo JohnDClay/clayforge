@@ -532,7 +532,7 @@ def production_dashboard():
             on_message=copilot_handler,
         )
         cf.ui.text(
-            "For real prod, wire copilot to db queries (see auth_db_*.py) or agent teams (07). Full Command Center cross-mutation in gallery.",
+            "For real prod, wire copilot to db queries (see auth_db_*.py) or agent teams (07).",
             size="xs",
         )
 

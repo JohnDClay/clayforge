@@ -35,9 +35,9 @@ Without a key → stunning built-in simulation (perfect for demos).
 With a key → the dedicated card auto-wires real token-by-token streaming via GrokClient.
 Both paths deliver identical gorgeous UI, tool cards, and live WS updates.
 
-Discoverability in the surfaces:
-- `clayforge showcase` — clean dedicated tab: the full interactive GrokChat appears ONLY in the "GrokChat" tab (nice title + prose first, full composer + tool cards). Zero leakage to other sections.
-- `clayforge gallery` — primary rich tester + "Real Grok Streaming Live Tester" (ephemeral key activation for true xAI tokens) + Command Center.
+Discoverability:
+- `clayforge showcase` — the full interactive GrokChat appears in the dedicated "GrokChat" tab (title + prose first, full composer + tool cards).
+- See other `examples/` for production patterns (e.g. 04 for AgentCanvas + GrokChat together).
 """
 
 import os

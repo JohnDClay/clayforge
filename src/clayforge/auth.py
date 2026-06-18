@@ -277,11 +277,16 @@ class Auth:
 
         Works automatically inside @app.page functions thanks to ClayForge's
         request context. You can also pass an explicit Request.
+        Falls back to auth context (set for WS/ready) when no request.
         """
         if request is None:
             request = get_current_request()
 
         if request is None:
+            # WS / ready / non-HTTP contexts use the auth user context set by server
+            user = get_auth_user_from_context()
+            if user:
+                return user
             return None
 
         cookie = request.cookies.get(self.cookie_name)

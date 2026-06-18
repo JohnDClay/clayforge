@@ -246,7 +246,7 @@ class Select(Element):
         return (
             f'<div id="{self.id}" class="w-full">'
             f"{label_html}"
-            f'<select id="{self.id}-select" class="{cls}"{style}{extra}>{opts_html}</select>'
+            f'<select class="{cls}"{style}{extra}>{opts_html}</select>'
             f"</div>"
         )
 

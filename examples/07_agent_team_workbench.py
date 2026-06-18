@@ -26,8 +26,8 @@ CLI (recommended for development):
     clayforge run --app examples.07_agent_team_workbench:app
 
 Discoverability:
-- `clayforge showcase` — polished marketing view with GrokChat in its own tab and the Research Swarm (AgentCanvas) in the Agent Vision tab only (nice titles first, full interactive, zero pollution of other sections).
-- `clayforge gallery` — deepest live experience (Command Center driving multiple simultaneous canvases + Grok instances via the public update_agent_status / add_event API).
+- `clayforge showcase` — polished view with GrokChat in its tab and Research Swarm (AgentCanvas) in the Agent Vision tab (titles first, full interactive).
+- This file is the canonical production reference for multi-agent + steering patterns.
 
 No extra dependencies required for the core AgentCanvas + GrokChat experience.
 Install "clayforge[viz]" for the optional structured deliverables table.

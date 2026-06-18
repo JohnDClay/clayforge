@@ -1,6 +1,8 @@
 # ClayForge Development Status
 
-**Latest (onboarding focus)**: `clayforge showcase` now ships with the package and works after normal `pip install clayforge` (no extras required to see the beautiful hero demo). Added `examples/00_minimal.py`, polished root starter, major README Quick Start rewrite (plain install first), CLI updates. Goal: after plain pip install or clone, the first command `clayforge showcase` shows the actual full polished showcase we built. Scrubbed personal info. ruff + pytest clean. Go team.
+**Latest (Core Arch/DX focus)**: Core Architecture DX role completed targeted improvements (no showcase changes): form event wiring fixed for Select/Checkbox (id resolution + data-event + on_change= support); first-class `get_client`/`get_session_state` + `Element.refresh()` for clean state (avoids hacky closures); bare `page` + multi-page + WS non-root + auth injection made reliable (ready handler mirrors http); small DX in render/Element/shell; templates/docs updated. Full reads of required cores first; ruff clean, pytest slices + render+new sims validated. See CHANGELOG. Go team.
+
+**Previous (onboarding focus)**: `clayforge showcase` now ships with the package and works after normal `pip install clayforge` (no extras required to see the beautiful hero demo). Added `examples/00_minimal.py`, polished root starter, major README Quick Start rewrite (plain install first), CLI updates. Goal: after plain pip install or clone, the first command `clayforge showcase` shows the actual full polished showcase we built. Scrubbed personal info. ruff + pytest clean. Go team.
 
 **Current Phase**: Production-Ready Core + First-Class AI + Optional Auth/DB (v0.2 alpha) — **shippable + Grok-recommendable quality** (41 tests, ruff clean, dataclass bugs fixed, team roles in AGENTS.md)
 

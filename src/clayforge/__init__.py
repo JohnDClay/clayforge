@@ -20,6 +20,12 @@ Theming:
     cf.set_theme("light")
     cf.set_theme(cf.Theme(name="brand", css_vars={"--cf-primary": "#22c55e"}))
 
+State (first-class, simple):
+    def handler(data):
+        st = cf.get_session_state()
+        st["key"] = data.get("value")
+    # + element.refresh() after changes; on_change= supported on forms.
+
 Custom components:
     class MyWidget(cf.Element): ...
     cf.register_component(MyWidget, "my_widget")
@@ -50,7 +56,9 @@ from .core.theme import (  # Theming foundation (cf.set_theme, App(theme=...))
     set_theme,
 )
 from .core.ui import (  # ui.* + custom component API
+    get_client,
     get_registered_components,
+    get_session_state,
     register_component,
     ui,
 )
@@ -115,6 +123,8 @@ __all__ = [
     "auth",
     "Database",
     "db",
+    "get_client",
+    "get_session_state",
     "__version__",
 ]
 

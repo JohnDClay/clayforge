@@ -34,7 +34,7 @@ The example seeds an admin user on first run:
     username: admin
     password: demo123   (change in real use!)
 
-Cross-integration: These auth+db patterns drop directly into viz dashboards (05/06/08) or agent workbenches (07). GrokChat/AgentCanvas work inside @require_login pages. `clayforge showcase` uses dedicated tabs (GrokChat only in "GrokChat" tab, AgentCanvas only in "Agent Vision" tab — nice titles + prose first, full interactive, zero leakage). See `clayforge gallery` Command Center + playground for live auth+db + viz/grok cross-mutation demos.
+Cross-integration: These auth+db patterns drop directly into viz dashboards (05/06/08) or agent workbenches (07). GrokChat/AgentCanvas work inside @require_login pages. See `clayforge showcase` for the tab-isolated Grok/Agent demos. This is the reference for full real auth + login forms + DB.
 """
 
 from __future__ import annotations

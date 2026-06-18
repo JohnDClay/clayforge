@@ -70,8 +70,14 @@ def new(
 
     target.mkdir(parents=True)
 
-    # Minimal viable scaffold (will be greatly expanded in later phases)
-    (target / "app.py").write_text(_get_default_app_template(), encoding="utf-8")
+    # Choose template (now implemented; default gives a nice interactive starter,
+    # minimal is the absolute smallest runnable app.py).
+    if template == "minimal":
+        app_content = _get_minimal_app_template()
+    else:
+        # default (and future grok-heavy etc fall back to a clean but featureful default)
+        app_content = _get_default_app_template()
+    (target / "app.py").write_text(app_content, encoding="utf-8")
     (target / ".env.example").write_text(
         "# Copy this file to .env (or export the var) for real Grok streaming.\n"
         "# ClayForge works perfectly without any key (gorgeous simulation fallback).\n"
@@ -82,56 +88,63 @@ def new(
     (target / "README.md").write_text(
         f"""# {project_name}
 
-Built with ClayForge — beautiful, reactive Python web apps.
+Built with **ClayForge** — beautiful reactive UIs in pure Python. Zero boilerplate.
 
-## Run it
+## Run
 
-    cd {project_name}
     clayforge run
 
-## Protect a page with auth + query the DB
+(From the project directory, or from the parent dir — auto-discovers unambiguous `app.py` projects.)
 
-Add this (copy-paste friendly) to your `app.py`:
+## Edit & iterate
 
-```python
-from clayforge import Auth, Database
-import clayforge as cf
+Edit `app.py`, save — the UI updates live over WebSocket.
 
-auth = Auth()          # signed cookies, @require_login (one line)
-db = Database()        # sqlite:///./clayforge.db — swap URL for Postgres
+No HTML, CSS, or JS required.
 
-@app.page("/dashboard")
-@auth.require_login
-def dashboard(user=None):
-    u = user or auth.get_current_user()
-    # Simple protected query — data scoped to the logged-in user
-    items = db.query(
-        "SELECT id, title, done FROM todos WHERE user_id = ? ORDER BY id",
-        (u["id"],) if u else (0,),
-    )
+## Add power (optional)
 
-    cf.ui.title(f"Hello {{u.get('name', 'there') if u else 'guest'}}")
-    for it in items:
-        cf.ui.text(f"• {{it['title']}}")
+```bash
+pip install "clayforge[grok,db,auth,viz]"
 ```
 
-See complete patterns:
-- `examples/auth_db_todo.py`
-- `examples/internal_crm_with_auth.py`
+- Real Grok streaming & AgentCanvas: set `XAI_API_KEY` (see `.env.example`)
+- Auth + DB: `from clayforge import auth, db`
+- Viz: PlotlyChart, DataTable
 
-(For production extras: `pip install "clayforge[auth,db]"`)
+See full patterns: `clayforge showcase`
 
-## Discover more instantly
+## Multi-page apps
+Use `@app.page("/dashboard")` (or bare `from clayforge import page`).
 
+`pages/` dir + `import pages.xxx` (created on `clayforge new`) keeps things organized.
+Navigation is just real paths.
 
-- `clayforge showcase` — beautiful multi-section demo (dashboards, Grok, agents, forms…)
-- Theming, custom components, and more in the docs
+## Production
 
-Edit `app.py`, save — UI updates live over WebSocket. Zero HTML/JS/CSS.
+    clayforge deploy --platform docker -d .
+    # or railway, fly, etc. (real templates)
 """,
         encoding="utf-8",
     )
     (target / "requirements.txt").write_text("clayforge\n", encoding="utf-8")
+
+    # Standard .gitignore so new projects start clean (core + packaging hygiene)
+    (target / ".gitignore").write_text(
+        "__pycache__/\n"
+        "*.py[cod]\n"
+        "*$py.class\n"
+        ".env\n"
+        ".venv/\n"
+        "venv/\n"
+        "*.db\n"
+        "clayforge.db\n"
+        ".clayforge*\n"
+        "dist/\n"
+        "build/\n"
+        "*.egg-info/\n",
+        encoding="utf-8",
+    )
 
     # Create pages/ and components/ folders for good habits
     (target / "pages").mkdir()
@@ -144,9 +157,9 @@ Edit `app.py`, save — UI updates live over WebSocket. Zero HTML/JS/CSS.
             Text.from_markup(
                 f"[bold green]+[/bold green] Created new ClayForge project at [bold]{project_name}[/bold]\n\n"
                 "Next steps:\n"
-                f"  [cyan]cd {project_name}[/cyan]\n"
+                f"  [cyan]cd {project_name}[/cyan]  (recommended)\n"
                 "  [cyan]clayforge run[/cyan]\n\n"
-                "Edit [bold]app.py[/bold] and watch the magic happen."
+                "Edit [bold]app.py[/bold] and watch live updates. `clayforge run` works from parent dir too."
             ),
             title="[bold cyan]ClayForge[/bold cyan]",
             border_style="cyan",
@@ -155,102 +168,124 @@ Edit `app.py`, save — UI updates live over WebSocket. Zero HTML/JS/CSS.
 
 
 def _get_default_app_template() -> str:
+    """Clean, excellent, bloat-free default starter demonstrating recommended core patterns."""
     return '''"""
-ClayForge Application — Beautiful, reactive, pure Python.
+ClayForge app (via `clayforge new`).
 
-Run with:
+Zero boilerplate starter. Edit and save for instant live UI.
+
+Run:
     clayforge run
-
-# =============================================================================
-# NEW TO CLAYFORGE? START HERE:
-# =============================================================================
-#
-
-#   The single best first command (the real hero demo):
-#
-#       clayforge showcase
-#
-#   Full polished multi-tab experience with dedicated GrokChat + real
-#   AgentCanvas Research Swarm (Agent Vision tab), live dashboards, etc.
-#   (The showcase *is* our showcase — no separate gallery.)
-#
-# Quick minimal starter: see examples/00_minimal.py
-#
-# Theming:
-#       import clayforge as cf
-#       cf.set_theme("dark")     # or "light", cf.Theme(...)
-#
-# Auth + DB one-liners:
-#       from clayforge import auth, db
-#
-# Best patterns after the showcase:
-#       examples/00_minimal.py
-#       examples/03_grok_chat.py
-#       examples/04_multi_agent_vision.py
-#
-# Pure Python + instant reactive WS updates.
-# =============================================================================
+    # or: python app.py
 """
 
 import clayforge as cf
 
 app = cf.App(
     title="My ClayForge App",
-    description="Built in minutes with the 2026 AI-native framework.",
+    description="Built in minutes with the AI-native Python web framework.",
 )
+
 
 @app.page("/")
 def home():
-    """Main page — written in pure Python with zero boilerplate."""
+    """Recommended core pattern: App + @page + cf.ui.* + context managers + on_click handlers."""
 
     cf.ui.title("Welcome to ClayForge")
-    cf.ui.subtitle("Stunning UIs. Reactive WebSockets. First-class Grok.")
+    cf.ui.subtitle("Stunning UIs • Pure Python • Live WebSocket reactivity")
+
+    # Live state via closure list (battle-tested zero-boilerplate pattern)
+    count = [0]
+
+    def increment():
+        count[0] += 1
+        cf.ui.success(f"Clicked {count[0]}x - server roundtrip + WS update")
+
+    # Demo first-class form + state (get_session_state + on_change)
+    def on_prio(v):
+        st = cf.get_session_state()
+        st["prio"] = v
+        cf.ui.success("Priority: " + str(v))
 
     with cf.ui.row(gap="6"):
         with cf.ui.card(title="Zero Boilerplate", subtitle="Just Python"):
-            cf.ui.text("Edit this file, save, and the UI updates instantly via WebSocket.")
-            cf.ui.text("No HTML. No CSS. No JavaScript. No full reruns.")
-
-            # Real buttons with server roundtrips — click to see toast + console log
-            def say_hello():
-                print("[ClayForge] Hello button clicked on the server!")
-
-            cf.ui.button("Say hello", variant="primary", classes="mt-4", on_click=say_hello)
-
-            # New components added in this milestone
+            cf.ui.text("Edit this file, save - UI updates instantly with no reload.")
+            cf.ui.text("No HTML, CSS, or JS for the vast majority of apps.")
             cf.ui.divider(classes="my-3")
-            cf.ui.badge("LIVE", variant="success")
-            cf.ui.badge("Python", variant="info", classes="ml-2")
+            cf.ui.select("Priority", ["Low","Med","High"], on_change=on_prio)
+            cf.ui.divider(classes="my-3")
+            cf.ui.button("Click me", variant="primary", on_click=increment)
+            cf.ui.badge("LIVE", variant="success", classes="ml-2")
 
-        with cf.ui.card(title="AI-Native", subtitle="Grok + Agents"):
-            cf.ui.markdown("Drop in `GrokChat(...)` or `AgentCanvas(...)` and get production-grade streaming interfaces in one line.")
-            cf.ui.text_input(placeholder="Ask Grok anything...", classes="mt-4")
+        with cf.ui.card(title="Production Ready", subtitle="FastAPI + WS"):
+            cf.ui.text("Real routing (@app.page / + /dashboard), theming, @app.api, auth+DB built-in.")
+            cf.ui.text("Use get_session_state + on_change + .refresh() for state.")
 
-    cf.ui.footer("Made with ClayForge • MIT License • Pure Python • 2026")
+    cf.ui.footer("Made with ClayForge - MIT - Pure Python - 2026")
 
-    # ------------------------------------------------------------------
-    # Auth + Database — first-class, zero boilerplate (copy-paste example)
-    # ------------------------------------------------------------------
-    # from clayforge import Auth, Database
-    # auth = Auth()                 # signed cookie sessions (one-line protection)
-    # db = Database()               # sqlite by default — trivial Postgres upgrade
-    #
-    # @app.page("/dashboard")
+    # Optional (uncomment after: pip install "clayforge[auth,db]"):
+    # from clayforge import auth, db
+    # @app.page("/protected")
     # @auth.require_login
-    # def dashboard(user=None):
-    #     """Protected page + simple DB query (scoped to the logged-in user)."""
-    #     u = user or auth.get_current_user()
-    #     # Real query — lives in your SQLite (or Postgres). Re-renders instantly.
-    #     items = db.query(
-    #         "SELECT id, title, done FROM todos WHERE user_id = ? ORDER BY id",
-    #         (u["id"],) if u else (0,),
-    #     )
-    #     cf.ui.title(f"Hello {u.get('name', 'there') if u else 'guest'}")
-    #     for it in items:
-    #         cf.ui.text(f"• {it['title']}")
-    #
-    # Full demos: examples/auth_db_todo.py  •  examples/internal_crm_with_auth.py
-    # (pip install "clayforge[auth,db]" unlocks production password hashing + async)
+    # def protected(user=None): ...
+
+    # Grok (uncomment after pip install "clayforge[grok]"):
+    # from clayforge.grok import GrokChat, AgentCanvas
+    # GrokChat(api_key=...) ; AgentCanvas(...)
+
+    # Multi-page using the core page registry (see pages/ dir created by `clayforge new`).
+    # For split files: create pages/foo.py with @app.page or from clayforge import page; @page
+    # then `import pages.foo` from app.py to register. Shared state via imports or closure.
+    # This template keeps demo in one file for simplicity; /dashboard below is real.
+
+
+@app.page("/dashboard")
+def dashboard():
+    """Clean second page registered on the same App. Uses same core @app.page."""
+    cf.ui.title("Dashboard Page")
+    cf.ui.subtitle("Multi-page navigation via paths (e.g. visit /dashboard).")
+
+    with cf.ui.card(title="pages/ + registry pattern"):
+        cf.ui.text("Organize with pages/home.py + pages/dashboard.py + imports.")
+        cf.ui.text("See examples/auth_db_todo.py ( / and /dashboard with auth).")
+        cf.ui.text("Core: just multiple decorators on the App or default_app.")
+
+    cf.ui.footer("ClayForge • multi-page core demo")
+
+
+if __name__ == "__main__":
+    app.run()
+'''
+
+
+def _get_minimal_app_template() -> str:
+    """Absolute smallest working starter for --template minimal (still beautiful + fully live)."""
+    return '''"""
+Minimal ClayForge app (via `clayforge new --template minimal`).
+
+Run:
+    clayforge run
+    # or: python app.py
+"""
+import clayforge as cf
+
+app = cf.App(title="Minimal ClayForge")
+
+
+@app.page("/")
+def home():
+    cf.ui.title("Hello from ClayForge")
+    cf.ui.subtitle("Pure Python. Edit and save for live updates.")
+
+    def ping():
+        cf.ui.success("Button clicked - server roundtrip + WS update.")
+
+    cf.ui.button("Click me", on_click=ping, variant="primary")
+    cf.ui.footer("ClayForge - MIT - 2026")
+
+
+if __name__ == "__main__":
+    app.run()
 '''
 
 
@@ -279,35 +314,81 @@ def run(
         )
     )
 
-    # Dynamically import the user's App (supports "app:app", "examples.foo:bar", etc.)
-    # and wire it into the server BEFORE uvicorn imports the ASGI app.
-    # This makes `clayforge new testapp && python -m clayforge run` (even without cd) work.
+    # Robust pre-mount + discovery (hardened for "new foo && run" w/o cd, subdirs, bare-page default_app).
+    # - Auto-discovers single sibling project dir containing app.py
+    # - Supports --app subdir:app (or bare "subdir")
+    # - chdir + sys.path for import + server _auto_mount (Path("app.py")) + reload
+    # - Falls back to shared default_app for "from clayforge import page; @page" style
+    # - Better errors + guidance
     try:
+        import importlib
+        import sys
+
+        # Resolve mod_name:attr
         if ":" in app_path:
             mod_name, attr = app_path.split(":", 1)
         else:
             mod_name, attr = app_path, "app"
-        import importlib
 
-        # Make cwd importable so "app" (from app.py created by `clayforge new`) resolves reliably
-        import sys
-        if str(Path.cwd()) not in sys.path:
-            sys.path.insert(0, str(Path.cwd()))
+        target_dir = Path.cwd()
+
+        # Subdir support (e.g. `clayforge run --app myproj:app` or --app myproj from parent)
+        if "/" in mod_name or "\\" in mod_name:
+            p = Path(mod_name.replace("\\", "/"))
+            if (target_dir / p / "app.py").exists():
+                target_dir = (target_dir / p).resolve()
+                mod_name = "app"
+            elif p.suffix == ".py" and (target_dir / p).exists():
+                target_dir = (target_dir / p.parent).resolve()
+                mod_name = p.stem or "app"
+        elif mod_name != "app" and (target_dir / mod_name).is_dir() and (target_dir / mod_name / "app.py").exists():
+            target_dir = (target_dir / mod_name).resolve()
+            mod_name = "app"
+
+        # Default "app:app" auto-discovery for new-without-cd UX (unambiguous single subdir wins)
+        if mod_name == "app" and not (target_dir / "app.py").exists():
+            candidates = [
+                d
+                for d in target_dir.iterdir()
+                if d.is_dir() and not d.name.startswith((".", "_")) and (d / "app.py").exists()
+            ]
+            if len(candidates) == 1:
+                target_dir = candidates[0].resolve()
+                console.print(f"[dim]Auto-discovered project '{target_dir.name}' (no cd needed)[/dim]")
+
+        # Make target importable + chdir so server auto-mount + uvicorn reload_dirs + bare Path checks succeed
+        if str(target_dir) not in sys.path:
+            sys.path.insert(0, str(target_dir))
+        if target_dir != Path.cwd():
+            os.chdir(target_dir)
 
         mod = importlib.import_module(mod_name)
         user_app = getattr(mod, attr, None)
-        if user_app is not None:
-            from clayforge.core.app import App
-            from clayforge.core.server import set_current_app
 
-            if isinstance(user_app, App):
-                set_current_app(user_app)
-            os.environ["CLAYFORGE_APP"] = app_path
+        from clayforge.core.app import App as _App
+        from clayforge.core.server import set_current_app as _set_app
+
+        if isinstance(user_app, _App):
+            _set_app(user_app)
+            os.environ["CLAYFORGE_APP"] = f"{mod_name}:{attr}"
+        else:
+            # bare-page support (module-level `page` decorator populates shared default_app)
+            try:
+                from clayforge.core.app import default_app as _def_app
+                if isinstance(_def_app, _App) and getattr(_def_app, "_pages", None):
+                    _set_app(_def_app)
+                    os.environ.setdefault("CLAYFORGE_APP", f"{mod_name}:{attr}")
+            except Exception:
+                pass
     except Exception as exc:  # noqa: BLE001
         console.print(
             f"[yellow]Warning:[/yellow] Could not pre-mount {app_path}: {exc}\n"
-            "Tip: cd into your project directory (the one containing app.py), or use --app path/to/yourapp:app\n"
-            "If you see port errors later, another server may be running — kill it or use --port 8001"
+            "Guidance:\n"
+            "  • cd <project> && clayforge run   (or run from inside)\n"
+            "  • clayforge run --app myproject:app   (subdir support)\n"
+            "  • PYTHONPATH=theprojectdir clayforge run\n"
+            "  • Bare @page style supported (no `app = App()` needed)\n"
+            "Port tip: --port 8001 if busy. Kill prior py processes on Windows if bind errors."
         )
 
     # The real server lives in core.server — we will import the mounted app there
@@ -362,33 +443,31 @@ def showcase() -> None:
     # Write/refresh the local showcase_demo.py so users have the "full version" as
     # an inspectable file in their project (per the design discussed).
     # The actual rich behavior comes from the packaged clayforge.showcase.
+    template = None
     try:
-        template = None
-        try:
-            # Preferred: read from the installed package (works after plain pip install)
-            import importlib.resources as pkg_resources
-            template = (pkg_resources.files("clayforge") / "showcase_demo.py").read_text(encoding="utf-8")
-        except Exception:
-            # Dev fallback: read the one at the repo root when running from source
-            # (e.g. PYTHONPATH=src python -m clayforge showcase)
-            root_demo = Path(__file__).parent.parent.parent.parent / "showcase_demo.py"
-            if root_demo.exists():
-                template = root_demo.read_text(encoding="utf-8")
-
-        if template:
-            header = (
-                f"# This file was (re)generated by `clayforge showcase` on {datetime.now().isoformat()}\n"
-                "# It launches the full official ClayForge Showcase (the exact rich experience\n"
-                "# the team sees from a git clone).\n"
-                "# Feel free to edit, version-control, or lift patterns from it.\n\n"
-            )
-            demo_file.write_text(header + template, encoding="utf-8")
-            console.print(f"[green]Wrote/updated[/green] {demo_file}")
-        else:
-            raise RuntimeError("Could not locate showcase_demo.py template")
-    except Exception as exc:  # noqa: BLE001
-        console.print(f"[yellow]Note:[/yellow] Could not write local showcase_demo.py ({exc}). "
-                      "The server will still run the full rich demo from the package.")
+        # Preferred: read from the installed package (works after plain pip install)
+        import importlib.resources as pkg_resources
+        template = (pkg_resources.files("clayforge") / "showcase_demo.py").read_text(encoding="utf-8")
+    except Exception:
+        pass
+    if not template:
+        # Dev / fallback: read the one at the repo root when running from source
+        # (e.g. PYTHONPATH=src python -m clayforge showcase)
+        root_demo = Path(__file__).parent.parent.parent.parent / "showcase_demo.py"
+        if root_demo.exists():
+            template = root_demo.read_text(encoding="utf-8")
+    if template:
+        header = (
+            f"# This file was (re)generated by `clayforge showcase` on {datetime.now().isoformat()}\n"
+            "# It launches the full official ClayForge Showcase (the exact rich experience\n"
+            "# the team sees from a git clone).\n"
+            "# Feel free to edit, version-control, or lift patterns from it.\n\n"
+        )
+        demo_file.write_text(header + template, encoding="utf-8")
+        console.print(f"[green]Wrote/updated[/green] {demo_file}")
+    else:
+        console.print("[yellow]Note:[/yellow] Could not locate showcase_demo.py template to write local copy.")
+        console.print("The server will still run the full rich demo from the package.")
 
     # Mount and run the real packaged rich showcase (this is what matches the
     # full experience from `python -m clayforge showcase` in the source tree).

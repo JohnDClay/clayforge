@@ -18,7 +18,7 @@ clayforge run --reload
 uvicorn src.clayforge.core.server:app --reload
 ```
 
-One-line experiences: `clayforge showcase` (full live demo) and `clayforge gallery` (or `clayforge docs`) (interactive docs + gallery).
+One-line experiences: `clayforge showcase` (full live demo). Examples/ provide deep copy-paste references. Use `clayforge new` for starting points.
 
 ## Code Style
 

@@ -71,10 +71,15 @@ class App:
     def page(self, path: str = "/") -> Callable[[Callable], Callable]:
         """Decorator to register a page renderer.
 
-        Usage:
+        Multi-page is first-class and reliable:
             @app.page("/")
-            def home():
-                cf.ui.title(...)
+            def home(): ...
+
+            @app.page("/dashboard")
+            def dash(user=None): ...   # works with bare `page` too + auth + WS
+
+        Navigation: use normal <a href="/dashboard"> or links; ClayForge serves the
+        right page + re-hydrates live elements over WS using the path from ready msg.
         """
 
         def decorator(fn: Callable) -> Callable:
@@ -144,19 +149,35 @@ class App:
         return f"<ClayForgeApp title={self.title!r} pages={len(self._pages)} apis={len(self._api_routes)}>"
 
 
-# Module-level helper so users can do:
-# from clayforge import page
-# @page("/")
-def page(path: str = "/") -> Callable[[Callable], Callable]:
-    """Module-level page decorator (attaches to a default global App).
+# ------------------------------------------------------------------
+# Module-level page + default App (now functional, not a stub)
+# Supports:
+#   from clayforge import page
+#   @page("/")
+#   def home(): ...
+#
+# The resulting pages are registered on `default_app`. The run / server
+# layers will pick this up automatically when no explicit `app = cf.App()`
+# instance is defined in the target module (see cli + server auto-mount).
+# ------------------------------------------------------------------
 
-    Advanced users will usually do `app = cf.App(); @app.page(...)`.
+default_app = App(title="ClayForge App")
+
+
+def page(path: str = "/") -> Callable[[Callable], Callable]:
+    """Module-level page decorator (registers on the framework default_app).
+
+    Also works alongside explicit `app = cf.App(); @app.page`.
+
+    Bare usage is fully supported:
+        from clayforge import page
+        @page("/about")
+        def about(): cf.ui.title("About")
+    The `clayforge run`, server auto-mount, and WS ready all discover default_app pages.
     """
 
-    # For foundation we simply return a no-op decorator that still works.
-    # The real global registry will live in the server layer later.
     def decorator(fn: Callable) -> Callable:
-        # In the future this will register on a global singleton App
+        default_app._pages[path] = fn
         return fn
 
     return decorator

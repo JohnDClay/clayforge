@@ -32,11 +32,22 @@ from ..auth import auth as _default_auth
 from ..auth import set_auth_context
 from ..db import db as _default_db  # noqa: F401  (exposed for convenience / advanced users)
 
+# For WS-ready user injection on multi-page + auth flows
+try:
+    from ..auth import get_auth_user_from_context
+    from ..auth import set_auth_context as _set_auth_ctx
+except Exception:  # pragma: no cover
+    def get_auth_user_from_context():  # type: ignore
+        return None
+
+    def _set_auth_ctx(u=None):  # type: ignore
+        pass
+
 # Import here (lazy in functions too) to keep startup light
 from .app import App
 from .client import Client, ClientManager
 from .theme import Theme, apply_theme_to_html, get_theme
-from .ui import render_page
+from .ui import _reset_current_client, _set_current_client, render_page
 
 logger = logging.getLogger("clayforge.server")
 
@@ -122,6 +133,16 @@ def _auto_mount_user_app() -> None:
         if isinstance(candidate, App):
             _current_app = candidate
             logger.info("Auto-mounted ClayForge user App from %s", spec)
+        else:
+            # Support modules that only use the top-level `page` decorator (no `app = App()` var)
+            try:
+                from .app import App as _AppT
+                from .app import default_app as _def
+                if isinstance(_def, _AppT) and getattr(_def, "_pages", None):
+                    _current_app = _def
+                    logger.info("Auto-mounted default_app (bare @page usage) from %s", spec)
+            except Exception:
+                pass
     except Exception as exc:  # noqa: BLE001
         logger.debug("Auto-mount skipped for %s (%s)", spec, exc)
 
@@ -318,12 +339,39 @@ async def _handle_client_message(client: Client, msg: dict[str, Any]) -> None:
     if msg_type == "ready":
         # Client finished loading and established WS. Time to activate the *real*
         # user page with correct element ids + registered handlers.
+        # Use path from client (sent on ready) so sub-pages (/foo) don't get stomped by home.
         user_app = _get_current_app()
         if user_app:
-            page_fn = user_app._pages.get("/") or user_app._pages.get("/app")
+            req_path = msg.get("path") or "/"
+            normalized = "/" + (req_path or "").strip("/")
+            if normalized == "//":
+                normalized = "/"
+            page_fn = (
+                user_app._pages.get(normalized)
+                or user_app._pages.get(normalized.rstrip("/"))
+                or user_app._pages.get(normalized + "/")
+                or user_app._pages.get("/")
+                or user_app._pages.get("/app")
+            )
             if page_fn:
                 try:
-                    page_html, all_elements = render_page(page_fn)
+                    # Support multi-page + auth protected pages on WS activation:
+                    # mirror the http _serve logic + use client session_state["user"] if present.
+                    user = client.session_state.get("user") if isinstance(getattr(client, "session_state", None), dict) else None
+                    if user:
+                        try:
+                            _set_auth_ctx(user)
+                            set_auth_context(user=user)
+                        except Exception:
+                            pass
+                    # Render, with user= injection for pages that declare it (auth patterns)
+                    if user is not None:
+                        try:
+                            page_html, all_elements = render_page(lambda: page_fn(user=user))
+                        except TypeError:
+                            page_html, all_elements = render_page(page_fn)
+                    else:
+                        page_html, all_elements = render_page(page_fn)
                     client.register_elements(all_elements)
 
                     # Replace the placeholder/snapshot root with the live-wired version.
@@ -349,10 +397,19 @@ async def _handle_client_message(client: Client, msg: dict[str, Any]) -> None:
             # Temporarily bind the client so advanced handlers can use elem._client if desired
             prev = getattr(elem, "_client", None)
             elem._client = client
+            # Set contextvar so get_client() / get_session_state() work inside user handlers (first-class state)
+            ctx_token = _set_current_client(client)
             try:
+                # Auto-sync simple form values back onto the live element instance (helps .value reads in some patterns)
+                if event_name == "change" and isinstance(data, dict):
+                    if hasattr(elem, "value"):
+                        elem.value = data.get("value", getattr(elem, "value", ""))
+                    if hasattr(elem, "checked"):
+                        elem.checked = bool(data.get("checked", False))
                 elem.handle_event(event_name, data)
             finally:
                 elem._client = prev
+                _reset_current_client(ctx_token)
 
             # Always give positive feedback for the basic milestone
             await client.send_toast("Event handled by Python ✓", level="success")
@@ -523,13 +580,8 @@ def _render_base_shell(
 {main_content}
     </div>
 
-    <!-- Footer -->
-    <footer class="border-t border-zinc-800 py-6">
-        <div class="max-w-7xl mx-auto px-6 text-xs text-zinc-500 flex flex-col md:flex-row gap-y-1 md:items-center justify-between">
-            <div>ClayForge • MIT License • Pure Python</div>
-            <div class="font-mono text-[10px]">Real elements • WS events • Zero boilerplate</div>
-        </div>
-    </footer>
+    <!-- No hardcoded footer in shell (avoids duplication with user cf.ui.footer or custom content).
+         Users control page-end content inside their @app.page. Nav provides light brand chrome. -->
 
     <script>
         function initTailwind() {{
@@ -565,8 +617,9 @@ def _render_base_shell(
 
             socket.onopen = () => {{
                 console.log('%c[ClayForge] WebSocket connected', 'color:#64748b');
-                // Tell server we are ready for the *live* element tree + handlers
-                socket.send(JSON.stringify({{ type: "ready" }}));
+                // Tell server we are ready for the *live* element tree + handlers.
+                // Include path so server activates the correct @app.page (not always /).
+                socket.send(JSON.stringify({{ type: "ready", path: location.pathname }}));
             }};
 
             socket.onmessage = (event) => {{
@@ -605,26 +658,39 @@ def _render_base_shell(
             // Click events (primary for Button)
             document.addEventListener('click', (e) => {{
                 const target = e.target.closest('[data-event="click"], [data-cf-role="button"]');
-                if (target && target.id && socket && socket.readyState === 1) {{
-                    socket.send(JSON.stringify({{
-                        type: "event",
-                        element_id: target.id,
-                        event: "click",
-                        data: {{}}
-                    }}));
+                if (target && socket && socket.readyState === 1) {{
+                    const element_id = target.id || (target.closest('[id]') ? target.closest('[id]').id : null);
+                    if (element_id) {{
+                        socket.send(JSON.stringify({{
+                            type: "event",
+                            element_id: element_id,
+                            event: "click",
+                            data: {{}}
+                        }}));
+                    }}
                 }}
             }});
 
-            // Change / input for future TextInput etc.
+            // Change / input for TextInput, Select, Checkbox, TextArea, File etc.
+            // Resolves the registered Element id even for composite controls
+            // (e.g. <div id=EL> <select data-event> or <label id=EL><input data-event>)
+            // by falling back to nearest ancestor id when the emitting tag itself has none.
             document.addEventListener('change', (e) => {{
-                const inp = e.target.closest('input[data-event], textarea[data-event], select[data-event]');
-                if (inp && inp.id && socket && socket.readyState === 1) {{
-                    socket.send(JSON.stringify({{
-                        type: "event",
-                        element_id: inp.id,
-                        event: "change",
-                        data: {{ value: inp.value }}
-                    }}));
+                const control = e.target.closest('input[data-event], textarea[data-event], select[data-event]');
+                if (control && socket && socket.readyState === 1) {{
+                    const element_id = control.id || (control.closest('[id]') ? control.closest('[id]').id : null);
+                    if (element_id) {{
+                        const data = {{ value: control.value }};
+                        if (control.type === 'checkbox') {{
+                            data.checked = !!control.checked;
+                        }}
+                        socket.send(JSON.stringify({{
+                            type: "event",
+                            element_id: element_id,
+                            event: "change",
+                            data: data
+                        }}));
+                    }}
                 }}
             }});
         }}

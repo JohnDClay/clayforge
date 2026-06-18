@@ -24,7 +24,7 @@ Or via the CLI (great for iteration):
 Optional richer experience:
     pip install "clayforge[viz]"   # (not required for this example)
 
-Cross-integration: These auth+db patterns drop directly into viz dashboards (05_visualizations.py, 06_production_viz_dashboard.py) or agent workbenches (07_agent_team_workbench.py, 08_ops_console.py). GrokChat/AgentCanvas work inside @require_login pages. `clayforge showcase` uses dedicated tabs (GrokChat only in "GrokChat" tab, AgentCanvas only in "Agent Vision" tab — nice titles + prose first, full interactive, zero leakage). See `clayforge gallery` Command Center + playground for live auth+db + viz/grok cross-mutation demos.
+Cross-integration: These auth+db patterns drop directly into viz dashboards (examples/05, 06) or agent workbenches (07, 08). GrokChat/AgentCanvas work inside @require_login pages. See `clayforge showcase` for dedicated tab demos of Grok surfaces (isolated properly). Production patterns here are the reference for @app.api + auth + db.
 
 Production upgrade path (shown in comments):
     - Switch to Postgres: Database("postgresql+asyncpg://...")
@@ -166,8 +166,28 @@ def api_todos(payload: dict[str, Any] | None = None):
 
 
 # ------------------------------------------------------------------
-# The actual UI pages
+# The actual UI pages (multi-page demo using core registry)
 # ------------------------------------------------------------------
+#
+# Core supports multiple @app.page (or bare `from clayforge import page`).
+# This file demonstrates / (public) + /dashboard (protected) with shared helpers.
+#
+# For real apps using pages/ dir (scaffolded by `clayforge new`):
+#   pages/__init__.py (empty or reexports)
+#   pages/home.py:
+#       import clayforge as cf
+#       from clayforge import page   # or use app if passed
+#       @page("/")
+#       def home(): ...
+#   pages/dashboard.py:
+#       @page("/dashboard")
+#       @auth_manager.require_login
+#       def dashboard(...): ...
+#   Then in your app.py:
+#       import pages.home, pages.dashboard  # triggers registration on import
+#   Shared state/funcs can live in pages/common.py or top level.
+# Navigation between pages: users use browser URLs or cf.ui links + redirects in handlers.
+# See also internal_crm_with_auth.py for more complete login form + DB example.
 
 
 @app.page("/")
